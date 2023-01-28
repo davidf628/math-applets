@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+
+	<title>Empirical Rule</title>
+	<meta charset="utf-8"> 
+
+    <!-- JSX Graph -->
+    <script type="text/javascript" charset="UTF-8" src="https://cdn.jsdelivr.net/npm/jsxgraph@1.5.0/distrib/jsxgraphcore.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph@1.5.0/distrib/jsxgraph.css" />
+
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+</head>
+
+<div id="jxgbox" class="jxgbox" style="width:500px; height:500px;"></div>
+
+<script type="module">
+
+import { dotplot } from './js/dotplot.js';
+
+var board = JXG.JSXGraph.initBoard('jxgbox', {
+          boundingbox:[-10,10,10,-10], 
+          showCopyright:false, 
+          showNavigation:false, 
+          axis:true,
+          keepaspectratio:true
+        });
+
+dotplot(board, {x: -8, y: -8, width: 16, height: 1}, { xmin: -10, xmax: 10, scale: 1 }, [], {border: true});
+
+</script>
+
+
+</html>
