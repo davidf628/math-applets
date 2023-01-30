@@ -2,8 +2,8 @@
 function swap(a, b) { return [b, a]; }
 function sort(list) { return list.sort(function(a, b) { return a - b; }); }
 function round(x, a=0) { return Math.round(x * Math.pow(10, a)) / Math.pow(10, a); }
-function min(a, b) { return a <= b ? a : b; }
-function max(a, b) { return a >= b ? a : b; }
+//function min(a, b) { return a <= b ? a : b; }
+//function max(a, b) { return a >= b ? a : b; }
 function sgn(a) { return a / abs(a) };
 function odd(x) { return (x % 2) == 1; }
 function even(x) { return (x % 2) == 0; }
@@ -57,6 +57,39 @@ export function median(list) {
     }
     return med;
 };
+
+/******************************************************************************
+ * Calculates the mode of a set of data, returns an array in case there are
+ * multiples.
+ * 
+ */
+
+export function mode(list) {
+
+}
+
+/******************************************************************************
+ * Finds the highest frequency of any data items within a data set. This is
+ * similar to the mode, but it returns the value of the frequency instead of
+ * the value(s) that occur the most.
+ */
+export function max_frequency(list) {
+    let counts = {};
+    for (let value of list) {
+        if (value in counts) {
+            counts[value] += 1;
+        } else {
+            counts[value] = 1;
+        }
+    }
+    let max = 0;
+    for (let value of Object.values(counts)) {
+        if (value > max) {
+            max = value;
+        }
+    }
+    return max;
+}
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Calculates q1 for the values of the items in an array
@@ -166,251 +199,251 @@ export function stdevp(list) {
 	//.   non-integer frequencies.
 	///////////////////////////////////////////////////////////////////////////////
 
-	wn: function(list, freq) {
-		if (list.length != freq.length) {
-			return NaN;
-		}
+export function wn(list, freq) {
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
-		return stats.sum(freq);
-	},
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
+    return stats.sum(freq);
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Finds the weighted minimum value in an array of numbers.
 	///////////////////////////////////////////////////////////////////////////////
 
-	wmin: function(list, freq) {
-		if (list.length != freq.length) {
-			return NaN;
-		}
+export function wmin(list, freq) {
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
-		return stats.min(list);
-	},
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
+    return stats.min(list);
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Finds the maximum value in an array of numbers.
 	///////////////////////////////////////////////////////////////////////////////
 
-	wmax: function(list, freq) {
+export function wmax(list, freq) {
 
-		if (list.length != freq.length) {
-			return NaN;
-		}
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
-		return stats.max(list);
-	},
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
+    return stats.max(list);
+};
 
 	///////////////////////////////////////////////////////////////////////////
 	//  Computes the weighted sum of an array of numbers.
 	///////////////////////////////////////////////////////////////////////////
 
-	wsum: function(list, freq) {
+export function wsum(list, freq) {
 
-		if (list.length != freq.length) {
-			return NaN;
-		}
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
 
-		var s = 0;
-		for(var i = 0; i < list.length; i++) {
-			s += list[i] * freq[i];
-		}
-		return s;
-	},
+    var s = 0;
+    for(var i = 0; i < list.length; i++) {
+        s += list[i] * freq[i];
+    }
+    return s;
+};
 
 	///////////////////////////////////////////////////////////////////////////
 	//  Computes a dot product of two sets of numbers, similar to a weighted
 	//  sum, but allows for "frequencies" to be negative.
 	///////////////////////////////////////////////////////////////////////////
 
-	innerproduct: function(list1, list2) {
+export function innerproduct(list1, list2) {
 
-		if (list1.length != list2.length) {
-			return NaN;
-		}
+    if (list1.length != list2.length) {
+        return NaN;
+    }
 
-		var s = 0;
-		for(var i = 0; i < list1.length; i++) {
-			s += list1[i] * list2[i];
-		}
-		return s;
-	},
+    var s = 0;
+    for(var i = 0; i < list1.length; i++) {
+        s += list1[i] * list2[i];
+    }
+    return s;
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Calculates the weighted median in an array
 	///////////////////////////////////////////////////////////////////////////////
 
-	wmedian: function(list, freq) {
+export function wmedian(list, freq) {
 
-		if (list.length != freq.length) {
-			return NaN;
-		}
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
 
-		[list, freq] = stats.wsort(list, freq);
-		var s = stats.sum(freq);
-		var mid = s / 2;
-		var csum = 0;
-		var index = 0;
-		while (csum < mid && index < freq.length) {
-			csum += freq[index];
-			index += 1;
-		}
-		return list[index - 1];
-	},
-
-	///////////////////////////////////////////////////////////////////////////////
-	//  Calculates the weighted value of q1 in an array
-	///////////////////////////////////////////////////////////////////////////////
-
-	wq1: function(list, freq) {
-
-		if (list.length != freq.length) {
-			return NaN;
-		}
-
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
-
-		[list, freq] = stats.wsort(list, freq);
-		var s = stats.sum(freq);
-		var mid = s / 2;
-		var csum = 0;
-		var index = 0;
-		while (csum < mid && index < freq.length) {
-			csum += freq[index];
-			index += 1;
-		}
-		return stats.wmedian(list.slice(0, index), freq.slice(0, index));
-	},
-
+    [list, freq] = stats.wsort(list, freq);
+    var s = stats.sum(freq);
+    var mid = s / 2;
+    var csum = 0;
+    var index = 0;
+    while (csum < mid && index < freq.length) {
+        csum += freq[index];
+        index += 1;
+    }
+    return list[index - 1];
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Calculates the weighted value of q1 in an array
 	///////////////////////////////////////////////////////////////////////////////
 
-	wq3: function(list, freq) {
+export function wq1(list, freq) {
 
-		if (list.length != freq.length) {
-			return NaN;
-		}
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
 
-		[list, freq] = stats.wsort(list, freq);
+    [list, freq] = stats.wsort(list, freq);
+    var s = stats.sum(freq);
+    var mid = s / 2;
+    var csum = 0;
+    var index = 0;
+    while (csum < mid && index < freq.length) {
+        csum += freq[index];
+        index += 1;
+    }
+    return stats.wmedian(list.slice(0, index), freq.slice(0, index));
+};
 
-		var s = stats.sum(freq);
-		var mid = s / 2;
-		var csum = 0;
-		var index = 0;
-		while (csum < mid && index < freq.length) {
-			csum += freq[index];
-			index += 1;
-		}
-		return stats.wmedian(list.slice(index, list.length), freq.slice(index, freq.length));
-	},
+
+	///////////////////////////////////////////////////////////////////////////////
+	//  Calculates the weighted value of q1 in an array
+	///////////////////////////////////////////////////////////////////////////////
+
+export function wq3(list, freq) {
+
+    if (list.length != freq.length) {
+        return NaN;
+    }
+
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
+
+    [list, freq] = stats.wsort(list, freq);
+
+    var s = stats.sum(freq);
+    var mid = s / 2;
+    var csum = 0;
+    var index = 0;
+    while (csum < mid && index < freq.length) {
+        csum += freq[index];
+        index += 1;
+    }
+    return stats.wmedian(list.slice(index, list.length), freq.slice(index, freq.length));
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Computes the weighted sum of the squares of an array of numbers.
 	///////////////////////////////////////////////////////////////////////////////
 
-	wsumofsqr: function(list, freq) {
+export function wsumofsqr(list, freq) {
 
-		if (list.length != freq.length) {
-			return NaN;
-		}
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
 
-		var s = 0;
-		for(var i = 0; i < list.length; i++) {
-			s += sqr(list[i]) * freq[i];
-		}
-		return s;
-	},
+    var s = 0;
+    for(var i = 0; i < list.length; i++) {
+        s += sqr(list[i]) * freq[i];
+    }
+    return s;
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Calculates the weighted sample standard deviation of a set of values.
 	///////////////////////////////////////////////////////////////////////////////
 
-	wstdev: function(list, freq) {
+export function wstdev(list, freq) {
 
-		if (list.length != freq.length) {
-			return NaN;
-		}
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
 
-		var mu = stats.wmean(list, freq);
-		var ssd = 0; // sum of squared deviations
-		for(var i = 0; i < list.length; i++) {
-			ssd += freq[i] * sqr(list[i] - mu);
-		}
-		return sqrt(ssd / (stats.wn(list, freq) - 1));
-	},
+    var mu = stats.wmean(list, freq);
+    var ssd = 0; // sum of squared deviations
+    for(var i = 0; i < list.length; i++) {
+        ssd += freq[i] * sqr(list[i] - mu);
+    }
+    return sqrt(ssd / (stats.wn(list, freq) - 1));
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Calculates the weighted population standard deviation of a set of values.
 	///////////////////////////////////////////////////////////////////////////////
 
-	wstdevp: function(list, freq) {
+export function wstdevp(list, freq) {
 
-		if (list.length != freq.length) {
-			return NaN;
-		}
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
 
-		var mu = stats.wmean(list, freq);
-		var ssd = 0; // sum of squared deviations
-		for(var i = 0; i < list.length; i++) {
-			ssd += freq[i] * sqr(list[i] - mu);
-		}
-		return sqrt(ssd / stats.wn(list, freq));
-	},
+    var mu = stats.wmean(list, freq);
+    var ssd = 0; // sum of squared deviations
+    for(var i = 0; i < list.length; i++) {
+        ssd += freq[i] * sqr(list[i] - mu);
+    }
+    return sqrt(ssd / stats.wn(list, freq));
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Computes the linear correlation (Pearson) cofficent for paird data.
@@ -418,31 +451,31 @@ export function stdevp(list) {
 	//					   or there is not enough data in the data sets.
 	///////////////////////////////////////////////////////////////////////////////
 
-	correlation: function(x_data, y_data) {
+export function correlation(x_data, y_data) {
 
-		if(x_data.length != y_data.length) {
-			return NaN;
-		}
+    if(x_data.length != y_data.length) {
+        return NaN;
+    }
 
-		if(x_data.length < 2) {
-			return NaN;
-		}
+    if(x_data.length < 2) {
+        return NaN;
+    }
 
-		var sx = stats.sum(x_data);
-		var sy = stats.sum(y_data);
-		var sxy = 0;
-		var sxx = stats.sumofsqr(x_data);
-		var syy = stats.sumofsqr(y_data);
-		var n = x_data.length;
+    var sx = stats.sum(x_data);
+    var sy = stats.sum(y_data);
+    var sxy = 0;
+    var sxx = stats.sumofsqr(x_data);
+    var syy = stats.sumofsqr(y_data);
+    var n = x_data.length;
 
-		for(var i = 0; i < x_data.length; i++) {
-			sxy += x_data[i] * y_data[i];
-		}
+    for(var i = 0; i < x_data.length; i++) {
+        sxy += x_data[i] * y_data[i];
+    }
 
-		var r = (n * sxy - sx * sy) / sqrt( (n * sxx - sqr(sx)) * (n * syy - sqr(sy)) );
+    var r = (n * sxy - sx * sy) / sqrt( (n * sxx - sqr(sx)) * (n * syy - sqr(sy)) );
 
-		return r;
-	},
+    return r;
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Computes the slope and y-intercept of of the line of best fit for a
@@ -451,27 +484,27 @@ export function stdevp(list) {
 	//					   or there is not enough data in the data sets.
 	///////////////////////////////////////////////////////////////////////////////
 
-	linreg: function(x_data, y_data) {
+export function linreg(x_data, y_data) {
 
-		if(x_data.length != y_data.length) {
-			return NaN;
-		}
+    if(x_data.length != y_data.length) {
+        return NaN;
+    }
 
-		if(x_data.length < 2) {
-			return NaN;
-		}
+    if(x_data.length < 2) {
+        return NaN;
+    }
 
-		var sx = stats.sum(x_data);
-		var sy = stats.sum(y_data);
-		var sxy = stats.innerproduct(x_data, y_data);
-		var sxx = stats.sumofsqr(x_data);
-		var n = x_data.length;
+    var sx = stats.sum(x_data);
+    var sy = stats.sum(y_data);
+    var sxy = stats.innerproduct(x_data, y_data);
+    var sxx = stats.sumofsqr(x_data);
+    var n = x_data.length;
 
-		var m = (n * sxy - sx * sy) / (n * sxx - sqr(sx));
-		var b = (sy - m * sx) / n;
+    var m = (n * sxy - sx * sy) / (n * sxx - sqr(sx));
+    var b = (sy - m * sx) / n;
 
-		return [m, b];
-	},
+    return [m, b];
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Expands an array based on a set of frequencies
@@ -479,56 +512,56 @@ export function stdevp(list) {
 	//.        does not match the number data items
 	///////////////////////////////////////////////////////////////////////////////
 
-	expandarray: function(list, freq) {
+export function expandarray(list, freq) {
 
-		if (list.length != freq.length) {
-			return NaN;
-		}
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if ((freq[i] < 0) || (Math.floor(freq[i]) != freq[i])) {
-				return NaN;
-			}
-		}
+    for (var i = 0; i < freq.length; i++) {
+        if ((freq[i] < 0) || (Math.floor(freq[i]) != freq[i])) {
+            return NaN;
+        }
+    }
 
-		var newlist = [];
-		for (var i = 0; i < list.length; i++) {
-			for (var j = 0; j < freq[i]; j++) {
-				newlist.push(freq[i]);
-			}
-		}
-	},
+    var newlist = [];
+    for (var i = 0; i < list.length; i++) {
+        for (var j = 0; j < freq[i]; j++) {
+            newlist.push(freq[i]);
+        }
+    }
+};
 
 	///////////////////////////////////////////////////////////////////////////////
 	//  Sorts two arrays simultaneoulsy by the values in the first array.
 	///////////////////////////////////////////////////////////////////////////////
 
-	wsort: function(list, freq) {
-		if (list.length != freq.length) {
-			return NaN;
-		}
+export function wsort(list, freq) {
+    if (list.length != freq.length) {
+        return NaN;
+    }
 
-		for (var i = 0; i < freq.length; i++) {
-			if (freq[i] < 0) {
-				return NaN;
-			}
-		}
+    for (var i = 0; i < freq.length; i++) {
+        if (freq[i] < 0) {
+            return NaN;
+        }
+    }
 
-		var newArray = [];
+    var newArray = [];
 
-		for (var i = 0; i < list.length; i++) {
-			newArray.push({ 'x' : list[i],  'f' : freq[i] });
-		}
+    for (var i = 0; i < list.length; i++) {
+        newArray.push({ 'x' : list[i],  'f' : freq[i] });
+    }
 
-		newArray.sort(function(a, b) {
-			return ((a.x < b.x) ? -1 : ((a.x == b.x) ? 0 : 1));
-		});
+    newArray.sort(function(a, b) {
+        return ((a.x < b.x) ? -1 : ((a.x == b.x) ? 0 : 1));
+    });
 
-		for (var i = 0; i < newArray.length; i++) {
-			list[i] = newArray[i].x;
-			freq[i] = newArray[i].f;
-		}
+    for (var i = 0; i < newArray.length; i++) {
+        list[i] = newArray[i].x;
+        freq[i] = newArray[i].f;
+    }
 
-		return [list, freq];
+    return [list, freq];
 
-	}
+};

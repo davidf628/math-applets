@@ -16,6 +16,7 @@
  */
 
 import { rectangle } from './rectangle.js';
+import { max_frequency } from './stats.js';
 
 export function dotplot(board, bounds, scale, data, args) {
 
@@ -79,5 +80,19 @@ export function dotplot(board, bounds, scale, data, args) {
         board.create('text', [x + (i+1)*xDist, axisy-labelStart, label], {anchorX: 'middle'})
     }
 
+    let counts = {};
+    let xUnitDist = xDist / scale.scale;
+    let xFirstTick = x + xDist;
+    console.log(xUnitDist);
+    for(let value of data) {
+        if (value in counts) {
+            counts[value] += 1;
+        } else {
+            counts[value] = 1;
+        }
+        board.create('point', [xFirstTick + (value - scale.xmin) * xUnitDist, axisy + (10 / yppu) * counts[value]], {
+            withLabel: false,
+        });
+    }
 
 }
