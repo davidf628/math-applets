@@ -19,6 +19,7 @@
 <script type="module">
 
 import { dotplot } from './js/dotplot.js';
+import { randomNormalData } from './js/stats.js'
 
 var board = JXG.JSXGraph.initBoard('jxgbox', {
           boundingbox:[-10,10,10,-10], 
@@ -28,7 +29,10 @@ var board = JXG.JSXGraph.initBoard('jxgbox', {
           keepaspectratio:true
         });
 
-dotplot(board, {x: -8, y: -5, width: 16, height: 4}, { xmin: 10, xmax: 40, scale: 5 }, [13, 22, 13, 35], {border: true});
+let data = randomNormalData(50, 10, 40);
+console.log(data);
+
+dotplot(board, {x: -8, y: -5, width: 16, height: 4}, { xmin: 10, xmax: 40, scale: 5 }, data, {border: true});
 
 </script>
 

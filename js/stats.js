@@ -1,14 +1,6 @@
 
-function swap(a, b) { return [b, a]; }
-function sort(list) { return list.sort(function(a, b) { return a - b; }); }
-function round(x, a=0) { return Math.round(x * Math.pow(10, a)) / Math.pow(10, a); }
-//function min(a, b) { return a <= b ? a : b; }
-//function max(a, b) { return a >= b ? a : b; }
-function sgn(a) { return a / abs(a) };
-function odd(x) { return (x % 2) == 1; }
-function even(x) { return (x % 2) == 0; }
-function ln(x) { return Math.log(x); }
-function log(x) { return Math.log(x) / Math.log(10); }
+import { shuffle, sort } from './arrays.js';
+import { round } from './math.js'
 
 /******************************************************************************
  * Finds the minimum value in an array of numbers.
@@ -565,3 +557,89 @@ export function wsort(list, freq) {
     return [list, freq];
 
 };
+
+/******************************************************************************
+ * Creates a randomized data set between a mininum and maximum value that is 
+ * normally distributed. 
+ * 
+ * Inputs:
+ *   n - the number of values to create
+ *   min - the minimum of the data set
+ *   max - the maximum of the data set
+ */
+
+export function randomNormalData(n, min, max) {
+    let population = [];
+    let total = 0;
+    let p = 0.5;
+    for (let k = min; k < max; k++) {
+        let nValues = round(n * binompdf(max-1, p, k));
+        total += nValues;
+        for (let i = 0; i < nValues; i++) {
+            population.push(k);
+        }
+    }
+    if (total < n) {
+        for (let i = total; i < n; i++) {
+            population.push(round(max * p));
+        }
+    }
+    return shuffle(population);
+}
+
+/*
+		Returns the factorial of n if 0 <= n <= 170 and n is an integer,
+		or else 0 is returned.
+
+		You will get creepy results if n is not an integer.
+*/
+function factorial (n) {
+
+	var i, fact = 1;
+
+	if ((n <= 170) && (n >= 0)) {
+		for(i = n; i >= 1; i--) {
+			fact *= i;
+		}
+	}
+	else fact = 0;
+
+	return fact;
+}
+
+/*
+		Returns the number of permutations of n objects taken r at a time.
+
+		Beware the use of non-integer values for n and r!
+*/
+function permutation (n, r) {
+		return (factorial(n) / factorial(n - r));
+}
+
+/*
+		Returns the number of combinations of n objects taken r at a time.
+
+		Beware the use of non-integer values for n and r!
+*/
+function combination (n, r) {
+		return (factorial(n) / (factorial(r) * factorial(n - r)));
+}
+
+/*
+		Returns the binomial probability of x successes for n trials and
+		probability of success p.
+
+*/
+
+function binompdf(n, p, x) {
+	return combination(n, x) * Math.pow(p, x) * Math.pow(1 - p, n - x);
+}
+
+function binomcdf(n, p, x) {
+	var sum = 0;
+	var i;
+	for(i = 0; i <= x; i++) {
+		sum += binompdf(n, p, i);
+	}
+	return sum;
+}

@@ -50,24 +50,28 @@ export function dotplot(board, bounds, scale, data, args) {
 
     let border = args.border ? args.border : false;
     let borderColor = args.borderColor ? args.borderColor : 'black';
+    let axisColor = args.axisColor ? args.axisColor : 'blue';
+    let pointColor = args.pointColor ? args.pointColor : 'black';
 
     if (border) {
         rectangle(board, bounds, {border: border, borderColor: borderColor, showFill: true, fillOpacity: 1, fillColor: 'white' });
     }
-
-    // Draw the axis
-    board.create('line', [[x, axisy], [x+width, axisy]], {
-        straightFirst: false,
-        straightLast: false,
-        firstArrow: true,
-        lastArrow: true,
-    });
 
     // Get board pixels per unit
     let box = board.getBoundingBox();
     let xppu = board.canvasWidth / (box[2] - box[0]);
     let yppu = board.canvasHeight / (box[1] - box[3]);
 
+    // Draw the axis
+    board.create('line', [[x, axisy], [x + width, axisy]], {
+        straightFirst: false,
+        straightLast: false,
+        firstArrow: true,
+        lastArrow: true,
+        fixed: true,
+        highlight: false,
+        strokeColor: axisColor
+    });
 
     // Draw the tick marks and labels
     let nMarks = Math.ceil((scale.xmax - scale.xmin) / scale.scale);
@@ -75,24 +79,51 @@ export function dotplot(board, bounds, scale, data, args) {
     let tickHeight = 5 / yppu; // Make tick marks about 10 pixels
     let labelStart = 10 / yppu; // Make labels start about 10 pixes below axis
     for(let i = 0; i <= nMarks; i++) {
-        board.create('segment', [[x + (i+1)*xDist, axisy+tickHeight],[x + (i+1)*xDist, axisy-tickHeight]]);
-        let label = Math.round(scale.xmin + i * scale.scale).toString();
-        board.create('text', [x + (i+1)*xDist, axisy-labelStart, label], {anchorX: 'middle'})
+
+        let labelText = Math.round(scale.xmin + i * scale.scale).toString();
+
+        board.create('segment', [[x + (i+1) * xDist, axisy + tickHeight],[x + (i+1) * xDist, axisy - tickHeight]], {
+            highlight: false,
+            fixed: true,
+            strokeColor: axisColor
+        });
+       
+        board.create('text', [x + (i+1) * xDist, axisy - labelStart, labelText], {
+            anchorX: 'middle',
+            highlight: false,
+            fixed: true,
+        })
     }
 
     let counts = {};
     let xUnitDist = xDist / scale.scale;
     let xFirstTick = x + xDist;
-    console.log(xUnitDist);
+
     for(let value of data) {
         if (value in counts) {
             counts[value] += 1;
         } else {
             counts[value] = 1;
         }
-        board.create('point', [xFirstTick + (value - scale.xmin) * xUnitDist, axisy + (10 / yppu) * counts[value]], {
-            withLabel: false,
-        });
+
+        // Draw any points that are within the bounds of the scale
+        if(value < scale.xmin) {
+            console.log('too low');
+        }
+        if(value > scale.xmax) {
+            console.log('too high');
+        }
+        if ((value >= scale.xmin) && (value <= scale.xmax)) {
+            board.create('point', [xFirstTick + (value - scale.xmin) * xUnitDist, axisy + (10 / yppu) * counts[value]], {
+                withLabel: false,
+                showInfobox: false,
+                strokeColor: pointColor,
+                fillColor: pointColor,
+                fixed: true,
+            });
+        } else {
+            console.warn(`${value} in data set was outside the range of the dot plot scale.`);
+        }
     }
 
 }
