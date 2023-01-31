@@ -16,7 +16,7 @@
  */
 
 import { rectangle } from './rectangle.js';
-import { max_frequency } from './stats.js';
+//import { max_frequency } from './stats.js';
 
 export function dotplot(board, bounds, scale, data, args) {
 

@@ -1,4 +1,3 @@
-"use strict";
 /******************************************************************************
  *
  * This library contains routine math functions, and was previously saved as
@@ -6,39 +5,56 @@
  * individual modules and convert everything to typescript for clarity.
  *
  */
-exports.__esModule = true;
-exports.log = exports.ln = exports.even = exports.odd = exports.sgn = exports.round = exports.swap = void 0;
+
+
 /******************************************************************************
  * This function swaps two numbers contained in different variables.
  */
-function swap(a, b) {
+
+export function swap(a, b) {
     return [b, a];
 }
-exports.swap = swap;
-function round(x, a) {
-    if (a === void 0) { a = 0; }
+
+/******************************************************************************
+ * Implements rounding of a float to a specific number of decimal values (or
+ *   an integer)
+ */
+
+export function round(x, a = 0) {
     return Math.round(x * Math.pow(10, a)) / Math.pow(10, a);
 }
-exports.round = round;
+
 //function min(a, b) { return a <= b ? a : b; }
 //function max(a, b) { return a >= b ? a : b; }
-function sgn(a) {
+
+export function sgn(a) {
     return a / Math.abs(a);
 }
-exports.sgn = sgn;
-function odd(x) {
+
+export function odd(x) {
     return (x % 2) == 1;
 }
-exports.odd = odd;
-function even(x) {
+
+export function even(x) {
     return (x % 2) == 0;
 }
-exports.even = even;
-function ln(x) {
+
+export function ln(x) {
     return Math.log(x);
 }
-exports.ln = ln;
-function log(x) {
+
+export function log(x) {
     return Math.log(x) / Math.log(10);
 }
-exports.log = log;
+
+export function sqr(x) {
+    return Math.pow(x, 2);
+}
+
+export function sqrt(x) {
+    return Math.pow(x, 0.5);
+}
+
+export function cbrt(x) {
+    return Math.pow(x, 1 / 3);
+}
