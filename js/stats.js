@@ -3,9 +3,7 @@ import { round, sqr, sqrt } from './math.js';
 
 /******************************************************************************
  * Finds the minimum value in an array of numbers.
- *
- * Inputs:
- *   list - an array of numbeers
+ * @param list {number[]} - array to find the minimum
  */
 
 export function min(list) {
@@ -62,10 +60,12 @@ export function mode(list) {
  * Finds the highest frequency of any data items within a data set. This is
  * similar to the mode, but it returns the value of the frequency instead of
  * the value(s) that occur the most.
+ * 
+ * @param list {number[]} - array of number
  */
 
 export function max_frequency(list) {
-    let counts;
+    let counts = {};
     for (let value of list) {
         if (value in counts) {
             counts[value] += 1;
@@ -75,8 +75,7 @@ export function max_frequency(list) {
         }
     }
     let max = 0;
-    let value;
-    for (value of Object.values(counts)) {
+    for (let value of Object.values(counts)) {
         if (value > max) {
             max = value;
         }
@@ -515,21 +514,22 @@ export function wsort(list, freq) {
  *   max - the maximum of the data set
  */
 
-export function randomNormalData(n, min, max) {
+export function randomNormalData(size, min, max) {
     let population = [];
     let total = 0;
     let p = 0.5;
-    for (let k = min; k < max; k++) {
-        let nValues = round(n * binompdf(max - 1, p, k));
-        console.log(`k==${k}, binom==${binompdf(max - 1, p, k)}, nValues==${nValues} `);
+    let n = max - min + 1;
+    for (let k = 0; k < n; k++) {
+        let nValues = round(size * binompdf(n, p, k));
+        console.log(`k==${k}, binom==${binompdf(n, p, k)}, nValues==${nValues} `);
         total += nValues;
         for (let i = 0; i < nValues; i++) {
             population.push(k + min);
         }
     }
-    if (total < n) {
-        for (let i = total; i < n; i++) {
-            population.push(round(max * p));
+    if (total < size) {
+        for (let i = total; i < size; i++) {
+            population.push(round((max - min) * p + min));
         }
     }
     return shuffle(population);

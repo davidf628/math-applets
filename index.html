@@ -18,17 +18,17 @@
 
 <script type="module">
 
-import { dotplot } from './js/dotplot.js';
+import { DotPlot } from './js/dotplot.js';
 import { randomNormalDataSet, randomNormalData } from './js/stats.js'
 import { round } from './js/math.js';
 
 var board = JXG.JSXGraph.initBoard('jxgbox', {
-          boundingbox:[-10,10,10,-10], 
-          showCopyright:false, 
-          showNavigation:false, 
-          axis:true,
-          keepaspectratio:true
-        });
+  boundingbox: [-10,10,10,-10], 
+  showCopyright: false, 
+  showNavigation: false, 
+  axis: true,
+  keepaspectratio: true
+});
 
 let data = randomNormalDataSet(200, 25, 4);
 for(let i=0; i<data.length; i++) {
@@ -36,9 +36,11 @@ for(let i=0; i<data.length; i++) {
 }
 console.log(data);
 
-let data2 = randomNormalData(200, 10, 40);
+let data2 = randomNormalData(76, 10, 40);
 
-dotplot(board, {x: -8, y: -5, width: 16, height: 4}, { xmin: 10, xmax: 40, scale: 5 }, data2, {border: true});
+let bounds = {x: -8, y: -5, width: 16, height: 4};
+let scale = { min: 10, max: 40, scale: 5 };
+let dotplot = new DotPlot(board, bounds, scale, data2, { border: true });
 
 </script>
 

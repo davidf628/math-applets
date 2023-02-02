@@ -9,6 +9,9 @@
 
 /******************************************************************************
  * This function swaps two numbers contained in different variables.
+ * @param a{any}
+ * @param b{any}
+ * @return array with the swapped elements
  */
 
 export function swap(a, b) {
@@ -17,7 +20,10 @@ export function swap(a, b) {
 
 /******************************************************************************
  * Implements rounding of a float to a specific number of decimal values (or
- *   an integer)
+ *   an integer if a is 0). Uses banker's rounding rule of Half-Up rounding
+ * @param x{number} - the value to round
+ * @param a{integer} - the number of decimals to round to
+ * @returns the rounded value 
  */
 
 export function round(x, a = 0) {
