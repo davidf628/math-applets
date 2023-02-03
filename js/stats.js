@@ -1,5 +1,5 @@
-import { shuffle, sort } from './arrays.js';
-import { round, sqr, sqrt } from './math.js';
+import { sort } from './arrays.js';
+import { sqr, sqrt } from './math.js';
 
 /******************************************************************************
  * Finds the minimum value in an array of numbers.
@@ -69,8 +69,7 @@ export function max_frequency(list) {
     for (let value of list) {
         if (value in counts) {
             counts[value] += 1;
-        }
-        else {
+        } else {
             counts[value] = 1;
         }
     }
@@ -502,114 +501,4 @@ export function wsort(list, freq) {
         freq[i] = newArray[i].f;
     }
     return [list, freq];
-}
-
-/******************************************************************************
- * Creates a randomized data set between a mininum and maximum value that is
- * normally distributed.
- *
- * Inputs:
- *   n - the number of values to create
- *   min - the minimum of the data set
- *   max - the maximum of the data set
- */
-
-export function randomNormalData(size, min, max) {
-    let population = [];
-    let total = 0;
-    let p = 0.5;
-    let n = max - min + 1;
-    for (let k = 0; k < n; k++) {
-        let nValues = round(size * binompdf(n, p, k));
-        console.log(`k==${k}, binom==${binompdf(n, p, k)}, nValues==${nValues} `);
-        total += nValues;
-        for (let i = 0; i < nValues; i++) {
-            population.push(k + min);
-        }
-    }
-    if (total < size) {
-        for (let i = total; i < size; i++) {
-            population.push(round((max - min) * p + min));
-        }
-    }
-    return shuffle(population);
-}
-
-function boxMullerTransform() {
-    const u1 = Math.random();
-    const u2 = Math.random();
-    const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-    const z1 = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
-    return { z0, z1 };
-}
-
-function getNormallyDistributedRandomNumber(mean, stddev) {
-    const { z0, z1 } = boxMullerTransform();
-    return z0 * stddev + mean;
-}
-
-export function randomNormalDataSet(n, mean, stdev) {
-    const generatedNumbers = [];
-    for (let i = 0; i < n; i += 1) {
-        generatedNumbers.push(getNormallyDistributedRandomNumber(mean, stdev));
-    }
-    return generatedNumbers;
-}
-
-/*
-        Returns the factorial of n if 0 <= n <= 170 and n is an integer,
-        or else 0 is returned.
-
-        You will get creepy results if n is not an integer.
-*/
-
-function factorial(n) {
-    var i, fact = 1;
-    if ((n <= 170) && (n >= 0)) {
-        for (i = n; i >= 1; i--) {
-            fact *= i;
-        }
-    }
-    else
-        fact = 0;
-    return fact;
-}
-
-/*
-        Returns the number of permutations of n objects taken r at a time.
-
-        Beware the use of non-integer values for n and r!
-*/
-
-function permutation(n, r) {
-    return (factorial(n) / factorial(n - r));
-}
-
-/*
-        Returns the number of combinations of n objects taken r at a time.
-
-        Beware the use of non-integer values for n and r!
-*/
-
-function combination(n, r) {
-    return (factorial(n) / (factorial(r) * factorial(n - r)));
-}
-
-/*
-        Returns the binomial probability of x successes for n trials and
-        probability of success p.
-
-*/
-
-function binompdf(n, p, x) {
-    return combination(n, x) * Math.pow(p, x) * Math.pow(1 - p, n - x);
-}
-
-function binomcdf(n, p, x) {
-    var sum = 0;
-    var i;
-    for (i = 0; i <= x; i++) {
-        sum += binompdf(n, p, i);
-    }
-    return sum;
 }

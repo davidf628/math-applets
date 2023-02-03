@@ -79,3 +79,87 @@ export function rectangle(board, bounds, args) {
 
 
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  This function draws a rectangle on the a JSX Board using the coordinates:
+//  	[x, y, width, height] as an input
+//
+///////////////////////////////////////////////////////////////////////////////
+
+class Point2 {
+
+	constructor(board, x, y, properties) {
+		this.p = board.create('point', [x, y], properties);
+		this.x = x;
+		this.y = y;
+	}
+
+	setCoords(x, y, delay) {
+		delay = delay || 0;
+		this.x = x;
+		this.y = y;
+		this.p.moveTo([x,y], delay);
+	}
+
+}
+
+class Rectangle2 {
+
+	constructor(board, x, y, width, height, color) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.color = color;
+		this.p1 = new Point2(board, x, y, { visible: false });
+		this.p2 = new Point2(board, x + width, y, { visible: false });
+		this.p3 = new Point2(board, x + width, y + height, { visible: false });
+		this.p4 = new Point2(board, x, y + height, { visible: false });
+		this.rect = board.create('polygon', [this.p1.p, this.p2.p, this.p3.p, this.p4.p], {
+			hasInnerPoints: false,
+			fillColor: color,
+			fixed: true,
+			highlight: false,
+			borders: {
+				strokeColor: '#0000FF',
+				fixed: true,
+				highlight: false
+			}
+		});
+	}
+
+	setHeight(height, delay) {
+		delay = delay || 0;
+		this.p3.setCoords(this.x + this.width, this.y + height, delay);
+		this.p4.setCoords(this.x, this.y + height, delay);
+		this.height = height;
+	}
+
+
+	setWidth(width, delay) {
+		delay = delay || 0;
+		this.p2.setCoords(this.x + width, this.y, delay);
+		this.p3.setCoords(this.x + width, this.y + this.height, delay);
+		this.width = width;
+	}
+
+	setCoords(x, y, delay) {
+		delay = delay || 0;
+		this.p1.setCoords(x, y, delay);
+		this.p2.setCoords(x + this.width, y, delay);
+		this.p3.setCoords(x + this.width, y + this.height, delay);
+		this.p4.setCoords(x, y + this.height, delay);
+		this.x = x;
+		this.y = y;
+	}
+
+	setColor(color) {
+		this.color = color;
+		this.rect.setAttribute( { fillColor: color } );
+		this.rect.needsUpdate = true;
+		// Find a way to set the border of the polygon to the new color (set each border separately)
+	}
+
+}
