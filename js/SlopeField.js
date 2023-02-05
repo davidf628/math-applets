@@ -8,7 +8,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function JSXSlopeField(board, derivative, args) {
+export function JSXSlopeField(board, derivative, args) {
 
 	var length = 1;
 	var density = 1;

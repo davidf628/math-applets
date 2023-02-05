@@ -39,3 +39,12 @@ function JSXSetBounds(board, bounds, keepAspectRatio) {
 	return board.setBoundingBox([xmin, ymax, xmax, ymin], keepAspectRatio);
 }
 
+
+
+
+export function removeSpaces(s) {
+	while(s.search(' ') != -1) {
+		s = s.replace(' ', '');
+	}
+	return s;
+}

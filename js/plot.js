@@ -28,7 +28,7 @@ dashsetting = 3;
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function plot_function(curve, relation, start_x, end_x, args) {
+export function plot_function(curve, relation, start_x, end_x, args) {
 
 	if(args === undefined) {
 		args = {};
@@ -203,7 +203,7 @@ function plot_function(curve, relation, start_x, end_x, args) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function plot_polar(curve, expression, tmin, tmax, args) {
+export function plot_polar(curve, expression, tmin, tmax, args) {
 
 	var color = args.color ? args.color : 'blue';
 	var density = args.density ? args.density : 0.01;
@@ -250,7 +250,7 @@ function plot_polar(curve, expression, tmin, tmax, args) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function plot_parametric(curve, x_t, y_t, tmin, tmax, args) {
+export function plot_parametric(curve, x_t, y_t, tmin, tmax, args) {
 
 	if(args === undefined) {
 		args = {};
@@ -390,13 +390,13 @@ function plot_parametric(curve, x_t, y_t, tmin, tmax, args) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function implicit_plot(relation, args) {
+export function implicit_plot(relation, args) {
 
 	//var func = board.jc.snippet(relation, true, ['x', 'y'], false);
 	//cv.func = func;
 	//cv.update();
 
-/*	if(args === undefined) {
+	if(args === undefined) {
 		args = {};
 	}
 
@@ -490,7 +490,7 @@ function implicit_plot(relation, args) {
 
 	}
 
-	board.unsuspendUpdate();*/
+	board.unsuspendUpdate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1100,7 +1100,7 @@ me.px = 300; me.py = 300;
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function plot(curve, relation, start_x, end_x, args) {
+export function plot(curve, relation, start_x, end_x, args) {
 
 	if(args === undefined) {
 		var args = {};

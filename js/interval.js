@@ -1,29 +1,26 @@
 
 // Pattern for a restricted interval:
 
-regex_math = '|[\\w\\+\\-\\*\\/^()]*';
+const regex_math = '|[\\w\\+\\-\\*\\/^()]*';
 
-regex_interval = '(\\(|\\[)\\s*' +                       // ( or [
-				 '(-?\\d*\\.?\\d*|-inf(inity)?|-oo)' +   // -2, 1.8, -inf, -oo
-				 ',\\s*' +                               // ,
-				 '(-?\\d*\\.?\\d*|\\+?inf(inity)?|\\+?oo)\\s*' + // -2, 1.8, +inf, +oo
-				 '(\\)|\\])';                            // ] or )
+const regex_interval = '(\\(|\\[)\\s*' +                       // ( or [
+			           '(-?\\d*\\.?\\d*|-inf(inity)?|-oo)' +   // -2, 1.8, -inf, -oo
+			      	   ',\\s*' +                               // ,
+				       '(-?\\d*\\.?\\d*|\\+?inf(inity)?|\\+?oo)\\s*' + // -2, 1.8, +inf, +oo
+				       '(\\)|\\])';                            // ] or )
 
 // Pattern for a hole in the graph:
 
-	regex_hole = '[Xx]\\s*!=\\s*' +          // x !=
-				 '(-?\\d*\\.?\\d*)';        // -2, 1.8, etc.
+const regex_hole = '[Xx]\\s*!=\\s*' +          // x !=
+				   '(-?\\d*\\.?\\d*)';        // -2, 1.8, etc.
 
-///////////////////////////////////////////////////////////
-//
-// A function can be defined such as: y = 2x-5 (-2,5]
-//   and the interval needs to be removed for graphing
-//   this function determines if an interval exists and
-//   returns it if so, or a blank string if it does not
-//
-////////////////////////////////////////////////////////////
-
-function getInterval(relation) {
+/******************************************************************************
+ * A function can be defined such as: y = 2x-5 (-2,5] and the interval needs
+ *  to be removed for graphing this function determines if an interval exists 
+ *  and returns it if so, or a blank string if it does not
+ * @param relation {string} The relation to check for an interval 
+*/
+export function getInterval(relation) {
 
 	var interval = '';
 	var intervalstart = 0;
@@ -41,7 +38,7 @@ function getInterval(relation) {
 	return interval;
 }
 
-function removeInterval(relation) {
+export function removeInterval(relation) {
 
 	var interval = '';
 	var intervalstart = 0;
@@ -66,7 +63,7 @@ function removeInterval(relation) {
 //
 ////////////////////////////////////////////////////////////
 
-function getLowerEndpoint(interval) {
+export function getLowerEndpoint(interval) {
 	interval = removeSpaces(interval);
 	l = interval.split(',');
 	l[0] = l[0].substring(1, l[0].length);
@@ -77,7 +74,7 @@ function getLowerEndpoint(interval) {
 	}
 }
 
-function getUpperEndpoint(interval) {
+export function getUpperEndpoint(interval) {
 	interval = removeSpaces(interval);
 	l = interval.split(',');
 	l[1] = l[1].substring(0, l[1].length - 1);
@@ -88,7 +85,7 @@ function getUpperEndpoint(interval) {
 	}
 }
 
-function getHoleValue(interval) {
+export function getHoleValue(interval) {
 	return evalstr(interval.split('=')[1]);
 }
 
@@ -99,48 +96,58 @@ function getHoleValue(interval) {
 //
 /////////////////////////////////////////////////////////////////
 
-function lowerBoundOpen(interval) {
+export function lowerBoundOpen(interval) {
 	return interval.includes('(');
 }
 
-function upperBoundOpen(interval) {
+export function upperBoundOpen(interval) {
 	return interval.includes(')');
 }
 
-function lowerBoundClosed(interval) {
+export function lowerBoundClosed(interval) {
 	return interval.includes('[');
 }
 
-function upperBoundClosed(interval) {
+export function upperBoundClosed(interval) {
 	return interval.includes(']');
 }
 
-///////////////////////////////////////////////////////////////
-//
-//
-/////////////////////////////////////////////////////////////////
 
-function isPoint(relation) {
+/******************************************************************************
+ * Determines if a relation given represents a point or not, which should be
+ *  of the form (x, y)
+ * @param relation {string} the relation to check
+ * @todo rename this function: containsPoint(relation)
+ */
+export function isPoint(relation) {
 
-	intervalstart = relation.search(regex_interval);
+/* 	let intervalstart = relation.search(regex_interval);
 	if (intervalstart != -1) {
-		interval = relation.substring(intervalstart, relation.length).trim();
-		relation = relation.substring(0, intervalstart).trim();
+		let interval = relation.substring(intervalstart, relation.length).trim();
+		let relation = relation.substring(0, intervalstart).trim();
 	}
 
-	return relation == '';
+	return relation === ''; */
+	return relation.search(regex_interval) != -1;
 
 }
 
-function isAsymptote(relation) {
+/******************************************************************************
+ * Determines if a relation contains an asymptote restriction or not, which
+ *  should be of the form x != 5
+ * @param relation {string} The relation to check
+ * @todo Rename this function containsAsymptote
+ */
+export function isAsymptote(relation) {
 
-	intervalstart = relation.search(regex_hole);
-	if (intervalstart != -1) {
-		interval = relation.substring(intervalstart, relation.length).trim();
-		relation = relation.substring(0, intervalstart).trim();
-	}
+/*	let intervalstart = relation.search(regex_hole);
+ 	if (intervalstart != -1) {
+		let interval = relation.substring(intervalstart, relation.length).trim();
+		let relation = relation.substring(0, intervalstart).trim();
+	} 
 
-	return relation == '';
+	return relation === ''; */
+	return relation.search(regex_hole) != -1;
 
 }
 

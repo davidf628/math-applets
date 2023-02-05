@@ -9,7 +9,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function JSXVectorField(board, mtext, ntext, args) {
+export function JSXVectorField(board, mtext, ntext, args) {
 
 	if(args === undefined) {
 		args = {};

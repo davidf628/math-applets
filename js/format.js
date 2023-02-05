@@ -7,7 +7,7 @@
 //
 ////////////////////////////////////////////////////////////////////
 
-function displayNumber(val) {
+export function displayNumber(val) {
 	if(Math.abs(val) < 0.00000000000001) {
 		return "0";
 	}
@@ -41,7 +41,7 @@ function displayNumber(val) {
 //
 ////////////////////////////////////////////////////////////////////
 
-function trimNumber(val) {
+export function trimNumber(val) {
 
 	// Make each number accurate to 12 decimal places - this also
 	// has the effect of rounding numbers like 1.99999999999 to 2
@@ -75,7 +75,7 @@ function trimNumber(val) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function formatNumber(val, dec) {
+export function formatNumber(val, dec) {
 	s = val.toFixed(dec);
 	if(s.includes('.')) {
 		while(s.slice(-1) == '0') {

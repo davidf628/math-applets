@@ -1,5 +1,5 @@
 import { binompdf } from './distributions.js';
-import { round } from './math.js';
+import { round } from './dmath.js';
 import { shuffle } from './arrays.js';
 
 /******************************************************************************

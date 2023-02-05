@@ -6,7 +6,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function preprocessFunction (s) {
+export function preprocessFunction (s) {
 
 	// convert any instances of implicit multiplication to explicit form
 	s = math.parse(s).toString({ implicit: 'show' });
@@ -28,7 +28,7 @@ function preprocessFunction (s) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function isImplicitEquation(expression) {
+export function isImplicitEquation(expression) {
 	try {
 		const node = math.parse(expression);
 	} catch(err) {
@@ -45,7 +45,7 @@ function isImplicitEquation(expression) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function convertImplicitEquation(expression) {
+export function convertImplicitEquation(expression) {
 
 	var equalloc = expression.search('=');
 	var LH = expression.substring(0, equalloc);
@@ -77,7 +77,7 @@ function convertImplicitEquation(expression) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function removeFunctionName(expression) {
+export function removeFunctionName(expression) {
 	if(expression.search('=') != -1) {
 		return expression.split('=')[1];
 	} else {
@@ -92,7 +92,7 @@ function removeFunctionName(expression) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function getFunctionName(expression) {
+export function getFunctionName(expression) {
 
 	var name = '';
 	var node = math.parse(expression);
@@ -114,7 +114,7 @@ function getFunctionName(expression) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function getVariables(expression) {
+export function getVariables(expression) {
 
 	// Gets a list of all variables within an expression - note that implicit multiplication doesn't work for two variables in a row
 	// So sin(xy) != sin(x*y) as far as math.js is concerned
@@ -144,16 +144,7 @@ function getVariables(expression) {
 
 }
 
-
-
-function removeSpaces(s) {
-	while(s.search(' ') != -1) {
-		s = s.replace(' ', '');
-	}
-	return s;
-}
-
-function makeJSFunction(board, s, variable) {
+export function makeJSFunction(board, s, variable) {
 
 	variable = variable === undefined ? 'x' : variable;
 

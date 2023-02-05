@@ -1,5 +1,5 @@
 
-function JSXFrequencyDistribution (dataset, nClasses, decimals = 0) {
+export function JSXFrequencyDistribution (dataset, nClasses, decimals = 0) {
 
 	var xmin = stats.min(dataset);
 	var xmax = stats.max(dataset);

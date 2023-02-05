@@ -1,4 +1,4 @@
-class Histogram {
+export class Histogram {
 
 	constructor(board, barHeights, colors, coords, delta_x) {
 		this.board = board;
