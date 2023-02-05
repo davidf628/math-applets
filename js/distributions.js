@@ -1,11 +1,16 @@
+import {
+    ln, odd, sqr, frac,
+    SQRT2PI, LNSQRT2PI, PI, MAXGAM, MAXLOG, MINLOG, MACHEP, BIG, BIGINV, LNPI, MAXLGM, PREC
+} from './dmath.js';
+
 /******************************************************************************
  * Returns the factorial of n if 0 <= n <= 170 and n is an integer,
  * or else 0 is returned.
 */
 export function factorial(n) {
-    var i, fact = 1;
+    var fact = 1;
     if ((n <= 170) && (n >= 0)) {
-        for (i = n; i >= 1; i--) {
+        for (let i = n; i >= 1; i--) {
             fact *= i;
         }
     }
@@ -41,23 +46,22 @@ export function binompdf(n, p, x) {
  */
 export function binomcdf(n, p, x) {
     var sum = 0;
-    var i;
-    for (i = 0; i <= x; i++) {
+    for (let i = 0; i <= x; i++) {
         sum += binompdf(n, p, i);
     }
     return sum;
 }
 
 /*
-	Calculates normal distribution values. Used to draw bell curves.
+    Calculates normal distribution values. Used to draw bell curves.
 */
 export function normalpdf(x, mean, stdev) {
-	mean = mean || 0;
-	stdev = stdev || 1;
-	var scale = 1 / Math.sqrt(2 * Math.PI * Math.pow(stdev, 2));
-	var z = (x - mean) / stdev;
-	var exponent = -0.5 * Math.pow(z, 2);
-	return scale * Math.exp(exponent);
+    mean = mean || 0;
+    stdev = stdev || 1;
+    var scale = 1 / Math.sqrt(2 * Math.PI * Math.pow(stdev, 2));
+    var z = (x - mean) / stdev;
+    var exponent = -0.5 * Math.pow(z, 2);
+    return scale * Math.exp(exponent);
 }
 
 /*
@@ -67,18 +71,17 @@ export function normalpdf(x, mean, stdev) {
 
 export function normalcdf(z) {
 
-	var coeff;
+	var coeff = 0;
 	var n = 0;
 	var sum = 0;
 	var a = 0;
 	var b = 0.1;
-	var precision = 1E-16;
 
 	if (z > 3.9) {
 		return 1.0;
 	} else if (z < -3.9) {
 		return 0.0;
-	} else while (Math.abs(b - a) > precision) {
+	} else while (Math.abs(b - a) > PREC) {
 		a = b;
 		coeff = Math.pow(-1, n) / (factorial(n) * Math.pow(2, n) * (2 * n + 1));
 		b = coeff * Math.pow(z, 2 * n + 1);
@@ -114,19 +117,19 @@ export function invnorm(p)
 
 	// Coefficients in rational approximations
 	var a = new Array (-3.969683028665376e+01,  2.209460984245205e+02,
-					   -2.759285104469687e+02,  1.383577518672690e+02,
-					   -3.066479806614716e+01,  2.506628277459239e+00);
+			   -2.759285104469687e+02,  1.383577518672690e+02,
+			   -3.066479806614716e+01,  2.506628277459239e+00);
 
 	var b = new Array (-5.447609879822406e+01,  1.615858368580409e+02,
-					   -1.556989798598866e+02,  6.680131188771972e+01,
-					   -1.328068155288572e+01 );
+			   -1.556989798598866e+02,  6.680131188771972e+01,
+		           -1.328068155288572e+01 );
 
 	var c = new Array (-7.784894002430293e-03, -3.223964580411365e-01,
-					   -2.400758277161838e+00, -2.549732539343734e+00,
-					    4.374664141464968e+00,  2.938163982698783e+00);
+			   -2.400758277161838e+00, -2.549732539343734e+00,
+			    4.374664141464968e+00,  2.938163982698783e+00);
 
 	var d = new Array (7.784695709041462e-03,  3.224671290700398e-01,
-					   2.445134137142996e+00,  3.754408661907416e+00);
+			   2.445134137142996e+00,  3.754408661907416e+00);
 
 	// Define break-points.
 	var plow  = 0.02425;
@@ -166,13 +169,12 @@ export function invnorm(p)
 ///////////////////////////////////////////////////////////////////////////////
 
 export function tpdf(t, df) {
-	var p, q;
 
 	if (df < 1) {
 		return NaN;
 	} else {
-		p = 0.5 * (df + 1);
-		q = 0.5 * df;
+		let p = 0.5 * (df + 1);
+		let q = 0.5 * df;
 		var s1 = gamma(p) / (Math.sqrt(df * PI) * gamma(q));
 		var s2 = Math.pow(1 + sqr(t) / df, -p);
 		return s1 * s2;
@@ -293,7 +295,7 @@ export function gamma(x) {
                             z = a - n;
                     }
                     z = Math.abs(a * Math.sin(Math.PI * z)) * stirf(a);
-                            if(z <= PI / MAXDOUBLE) {
+                            if(z <= PI / Number.MAX_VALUE) {
                                     return Infinity;
                             }
                             z = PI / z;
@@ -339,11 +341,11 @@ export function gamma(x) {
 ///////////////////////////////////////////////////////////////////////////////////
 
 export function sgnGamma(x) {
-if(x > 0.0) {
-    return 1;
-} else if(odd(Math.trunc(Math.abs(x)))) {
-    return 1;
-} else return -1;
+    if(x > 0.0) {
+        return 1; 
+    } else if(odd(Math.trunc(Math.abs(x)))) {
+        return 1;
+    } else return -1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -366,14 +368,11 @@ if(x > 0.0) {
 ///////////////////////////////////////////////////////////////////////////////
 
 export function PolEvl(x, coef, n) {
-
-var ans;
-
-ans = coef[0];
-for(var i = 1; i <= n; i++) {
-    ans = ans * x + coef[i];
-}
-return ans;
+    let ans = coef[0];
+    for(var i = 1; i <= n; i++) {
+        ans = ans * x + coef[i];
+    }
+    return ans;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -996,14 +995,14 @@ export function hGeom(a, b, c, z) {
     var x1 = 1;
     var x0 = 0;
     while((x1 - x0) > PREC) {
-            x0 = x1;
-            var a1 = risingFactorial(a, n);
-            var b1 = risingFactorial(b, n);
-            var c1 = risingFactorial(c, n);
-            var r1 = a1 * b1 / c1;
-            var r2 = Math.pow(z, n) / factorial(n);
-    x1 = x1 + r1 * r2;
-            n++;
+        x0 = x1;
+        var a1 = risingFactorial(a, n);
+        var b1 = risingFactorial(b, n);
+        var c1 = risingFactorial(c, n);
+        var r1 = a1 * b1 / c1;
+        var r2 = Math.pow(z, n) / factorial(n);
+        x1 = x1 + r1 * r2;
+        n++;
     }
     return x1;
 }

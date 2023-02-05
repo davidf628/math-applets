@@ -1,8 +1,9 @@
+import { min, max } from './stats.js';
 
 export function JSXFrequencyDistribution (dataset, nClasses, decimals = 0) {
 
-	var xmin = stats.min(dataset);
-	var xmax = stats.max(dataset);
+	var xmin = min(dataset);
+	var xmax = max(dataset);
 	var range = xmax - xmin;
 
 	var power = pow(10, decimals);

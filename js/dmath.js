@@ -21,6 +21,7 @@ export const MAXLGM  = 1.0383E+36;
 export const MACHEP  = 1.08420217248550444E-19;
 export const BIG     = 9.223372036854775808E18;
 export const BIGINV  = 1.084202172485504434007E-19;
+export const PREC    = 1E-16;
 
 export const MAXDOUBLE = Number.MAX_VALUE;
 export const MINDOUBLE = Number.MIN_VALUE;
@@ -50,6 +51,15 @@ export function swap(a, b) {
 
 export function round(x, a = 0) {
     return Math.round(x * Math.pow(10, a)) / Math.pow(10, a);
+}
+
+/******************************************************************************
+ * Returns the fractional part of a number 
+ */
+
+export function frac(x) {
+    x = Math.abs(x);
+    return x - Math.floor(x);
 }
 
 //function min(a, b) { return a <= b ? a : b; }

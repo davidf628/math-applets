@@ -1,4 +1,7 @@
 
+//import { evaluate } from 'mathjs';
+import { E, PI } from './dmath.js';
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Exchanges constansts pi and e to numbers and eliminates instances of
@@ -147,7 +150,6 @@ export function getVariables(expression) {
 export function makeJSFunction(board, s, variable) {
 
 	variable = variable === undefined ? 'x' : variable;
-
 	s = preprocessFunction(s);
 
 	return board.jc.snippet(s, true, variable, false);

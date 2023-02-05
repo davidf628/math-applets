@@ -1,3 +1,4 @@
+import { evalstr } from './eval.js';
 
 // Pattern for a restricted interval:
 

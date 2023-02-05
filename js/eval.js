@@ -1,4 +1,3 @@
-//import mathjs from '../node_modules/mathjs/lib/browser/math.js';
 //import { evaluate } from 'mathjs';
 import { isPoint, isAsymptote } from './interval.js';
 
