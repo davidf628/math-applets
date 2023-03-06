@@ -62,6 +62,19 @@ export function frac(x) {
     return x - Math.floor(x);
 }
 
+/******************************************************************************
+ * Maps a point within some specified domain to an output range
+ * @param x {number} - the point to change the mapping for
+ * @param domain {number[]} - the range of the input values. This should be a
+ *   two element array with a lower and upper bound of the range
+ * @param range {number[]} - the raound of the output values. This should be a
+ *   two element array with a lower and upper bound of the domain
+ */
+
+export function scalemap(x, domain, range) {
+    return (x - domain[0]) / (domain[1] - domain[0]) * (range[1] - range[0]) + range[0];
+}
+
 //function min(a, b) { return a <= b ? a : b; }
 //function max(a, b) { return a >= b ? a : b; }
 

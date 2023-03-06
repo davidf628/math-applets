@@ -3,50 +3,211 @@
 
 <head>
 
-	<title>Empirical Rule</title>
-	<meta charset="utf-8"> 
+    <title>Empirical Rule</title>
+    <meta charset="utf-8">
 
     <!-- JSX Graph -->
     <script type="text/javascript" charset="UTF-8" src="https://cdn.jsdelivr.net/npm/jsxgraph@1.5.0/distrib/jsxgraphcore.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph@1.5.0/distrib/jsxgraph.css" />
 
+    <!-- MathJS -->
     <!--<script type="text/javascript" charset="UTF-8" src="./node_modules/mathjs/lib/browser/math.js"></script> -->
-    <script type="text/javascript" charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.5.1/math.min.js"></script>
+    <script type="text/javascript" charset="UTF-8"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.5.1/math.min.js"></script>
 
+    <!-- jStat -->
+    <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.5/dist/jstat.min.js"></script>
+
+    <!-- Set a browser icon to use -->
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+    <!-- -->
 
 </head>
 
-<div id="jxgbox" class="jxgbox" style="width:500px; height:500px;"></div>
+<html>
+<h1>The Empirical Rule</h1>
+
+<label for="samplesize">Sample Size:</label>
+<input type="text" id="samplesize" name="samplesize" size="5" value="250">&emsp;&emsp;
+
+<label for="minimum">Min Value:</label>
+<input type="text" id="minimum" name="minimum" size="5" value="25">&emsp;&emsp;
+
+<label for="maximmum">Max Value:</label>
+<input type="text" id="maximum" name="maximum" size="5" value="65">&emsp;&emsp;
+
+<label for="distribution">Distribution:</label>
+<select name="distribution" id="distribution">
+    <option value="normal_a">Normal - A</option>
+    <option value="normal_b">Normal - B</option>
+    <option value="normal_c">Normal - C</option>
+    <option value="uniform">Uniform</option>
+    <option value="skewed_left">Skewed Left</option>
+    <option value="skewed_right">Skewed Right</option>
+</select>&emsp;&emsp;
+
+<input type="button" value="Create Data Set" onClick="update(true, false)">&emsp;&emsp;
+
+<br /><br />
+
+<label for="xmin">xMin:</label>
+<input type="text" id="xmin" name="xmin" size="5" value="35">&emsp;&emsp;
+
+<label for="xmax">xMax:</label>
+<input type="text" id="xmax" name="xmax" size="5" value="55">&emsp;&emsp;
+
+<label for="xscl">Scale:</label>
+<input type="text" id="xscl" name="xscl" size="5" value="5">&emsp;&emsp;
+
+<input type="button" value="Update Scale" onClick="update(false, true)">&emsp;&emsp;
+
+<input type="button" value="Toggle Fullscreen" onClick="fullscreen()">
+
+<br /><br />
+
+<div>
+    <div id='jxgbox' class='jxgbox' style='width:900px; height:600px; float: left; resize: both'></div>
+    <div id='displayboard' class='jxgbox' style='width: 320px; height: 600px; float: left; resize: both'></div>
+    <div id='displayboard2' class='jxgbox' style='width: 1220px; height: 100px; float: left; resize: both'></div>
+</div>
 
 <script type="module">
 
-//import { DotPlot } from './js/dotplot.js';
-//import { randomNormalDataSet, randomNormalData } from './js/stats.js'
-////import { round } from './js/math.js';
-import { evalstr } from './js/eval.js';
+    import { DotPlot } from './js/dotplot.js';
+    import { fullscreen } from './js/helpers.js';
+    import { randomNormalDataSet, randomNormalData } from './js/random.js';
+    import { round } from './js/dmath.js';
+    import { evalstr } from './js/eval.js';
+    import { mean, stdev } from './js/stats.js';
+    import { normalpdf } from './js/distributions.js';
+    import { CheckBox } from './js/checkbox.js';
 
-/*var board = JXG.JSXGraph.initBoard('jxgbox', {
-  boundingbox: [-10,10,10,-10], 
-  showCopyright: false, 
-  showNavigation: false, 
-  axis: true,
-  keepaspectratio: true
-});*/
+    let board = JXG.JSXGraph.initBoard('jxgbox', {
+        boundingbox: [-10, 10, 10, -10],
+        showCopyright: false,
+        showNavigation: false,
+        axis: false,
+        keepaspectratio: false,
+        zoom: {
+            enabled: false,
+        },
+        pan: {
+            enabled: false,
+        }
+    });
 
-//let data = randomNormalDataSet(200, 25, 4);
-//for(let i=0; i<data.length; i++) {
-//  data[i] = round(data[i]);
-//}
-//console.log(round(25.5));
-console.log(math.evaluate('2+5'));
-console.log(evalstr('5+5'));
+    let displayboard = JXG.JSXGraph.initBoard('displayboard', {
+        boundingbox: [0, 10, 10, 0],
+        axis: false,
+        showNavigation: false,
+        showCopyright: false,
+        keepaspectratio: false,
+        showClearTraces: false,
+        zoom: {
+            enabled: false
+        },
+        pan: {
+            enabled: false
+        }
+    });
 
-//let data2 = randomNormalData(76, 10, 40);
+    let displayboard2 = JXG.JSXGraph.initBoard('displayboard2', {
+        boundingbox: [0, 5, 5, 0],
+        axis: false,
+        showNavigation: false,
+        showCopyright: false,
+        keepaspectratio: false,
+        showClearTraces: false,
+        zoom: {
+            enabled: false
+        },
+        pan: {
+            enabled: false
+        }
+    });
 
-//let bounds = {x: -8, y: -5, width: 16, height: 4};
-//let scale = { min: 10, max: 40, scale: 5 };
-//let dotplot = new DotPlot(board, bounds, scale, data2, { border: true });
+    // Bind module functions to the window object
+    window.update = update;
+    window.fullscreen = fullscreen;
+
+    // Call init to start off in order to have something too look at:
+    let n = Number.parseInt(document.getElementById("samplesize").value);
+    let minimum = Number.parseInt(document.getElementById("minimum").value);
+    let maximum = Number.parseInt(document.getElementById("maximum").value);
+
+    let xmin = Number.parseInt(document.getElementById("xmin").value);
+    let xmax = Number.parseInt(document.getElementById("xmax").value);
+    let xscl = Number.parseInt(document.getElementById("xscl").value);
+
+    let data = randomNormalData(n, minimum, maximum);
+
+    let bounds = { x: -9, y: 8, width: 18, height: 20 };
+    let axis = { min: minimum, max: maximum, scale: xscl };
+    let dotplot = new DotPlot(board, bounds, axis, data, { border: false }); 
+    
+    let meanValue = mean(data);
+    let stdevValue = stdev(data);
+
+    const arrayRange = (start, stop, step) => Array.from(
+        { length: (stop - start) / step + 1 },
+        (value, index) => start + index * step
+    );
+
+    let dataX = arrayRange(minimum, maximum, 0.1);
+    let dataY = dataX.map(x => normalpdf(x, meanValue, stdevValue) * 20 );
+
+    console.log(dataX);
+    console.log(dataY);
+
+    dataX = dataX.map((x) => x - xmin - 10);
+
+
+
+    let normalCurve = board.create('curve',[dataX, dataY], 
+
+    );
+
+    
+    let meanDisplay = displayboard.create('Text', [1, 9.25, 
+        () => `&mu; = ${round(mean(data), 2)}`], 
+        { fontSize: 24, fixed: true, highlight: false });
+
+    let stdevDisplay = displayboard.create('Text', [5.5, 9.25, 
+        () => `&sigma; = ${round(stdev(data), 2)}`], 
+        { fontSize: 24, fixed: true, highlight: false });
+
+    let showNormalCurve = new CheckBox(displayboard, 
+        1, 8.25, 'Show Normal Curve', false, () => {
+
+        })
+
+    //let data = randomNormalDataSet(200, 25, 4);
+    //for(let i=0; i<data.length; i++) {
+    //  data[i] = round(data[i]);
+    //}
+    //console.log(round(25.5));
+
+    function update(newData, newAxis) {
+        n = Number.parseInt(document.getElementById("samplesize").value);
+        minimum = Number.parseInt(document.getElementById("minimum").value);
+        maximum = Number.parseInt(document.getElementById("maximum").value);
+        xmin = Number.parseInt(document.getElementById("xmin").value);
+        xmax = Number.parseInt(document.getElementById("xmax").value);
+        xscl = Number.parseInt(document.getElementById("xscl").value);
+
+        if (newData) {
+            data = randomNormalData(n, minimum, maximum);
+        }
+
+        if (newAxis) {
+            axis = { min: xmin, max: xmax, scale: xscl };
+        }
+        
+        dotplot.updatePlot(data, axis);
+        displayboard.update();
+
+    }
 
 </script>
 

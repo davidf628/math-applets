@@ -1,7 +1,7 @@
 /******************************************************************************
  * Creates a check box to interact with on a JSX Graph board
  */
-export class JSXCheckBox {
+export class CheckBox {
 
 	/**************************************************************************
 	 * Constructor for a JSXCheckBox object

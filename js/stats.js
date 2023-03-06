@@ -1,5 +1,5 @@
 import { sort } from './arrays.js';
-import { sqr, sqrt } from './math.js';
+import { sqr, sqrt } from './dmath.js';
 
 /******************************************************************************
  * Finds the minimum value in an array of numbers.
