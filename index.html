@@ -60,7 +60,19 @@
 <label for="xscl">Scale:</label>
 <input type="text" id="xscl" name="xscl" size="5" value="5">&emsp;&emsp;
 
-<input type="button" value="Update Scale" onClick="update(false, true)">&emsp;&emsp;
+<label for="highlights">Highlight Values:</label>
+<select name="highlights" id="highlights">
+    <option value="none">None</option>
+    <option value="within1">Within 1 Standard Deviation</option>
+    <option value="within2">Within 2 Standard Deviations</option>
+    <option value="within3">Within 3 Standard Deviations</option>
+    <option value="right1">One Std Dev to Right</option>
+    <option value="left1">One Std Dev to Left</option>
+    <option value="right1-2">Two Std Dev to Right</option>
+    <option value="right2">Only 2nd Std Dev to Right</option>
+</select>&emsp;&emsp;
+
+<input type="button" value="Update" onClick="update(false, true)">&emsp;&emsp;
 
 <input type="button" value="Toggle Fullscreen" onClick="fullscreen()">
 
@@ -74,12 +86,13 @@
 
 <script type="module">
 
+    import { aRange } from './js/arrays.js';
     import { DotPlot } from './js/dotplot.js';
     import { fullscreen } from './js/helpers.js';
     import { randomNormalDataSet, randomNormalData } from './js/random.js';
-    import { round } from './js/dmath.js';
+    import { round, scalemap } from './js/dmath.js';
     import { evalstr } from './js/eval.js';
-    import { mean, stdev } from './js/stats.js';
+    import { mean, stdev, max, min } from './js/stats.js';
     import { normalpdf } from './js/distributions.js';
     import { CheckBox } from './js/checkbox.js';
 
@@ -141,32 +154,25 @@
     let xscl = Number.parseInt(document.getElementById("xscl").value);
 
     let data = randomNormalData(n, minimum, maximum);
+    let highlightCount = 0;
+    let highlightPct = 0;
 
     let bounds = { x: -9, y: 8, width: 18, height: 20 };
-    let axis = { min: minimum, max: maximum, scale: xscl };
+    let axis = { min: xmin, max: xmax, scale: xscl };
     let dotplot = new DotPlot(board, bounds, axis, data, { border: false }); 
     
     let meanValue = mean(data);
     let stdevValue = stdev(data);
 
-    const arrayRange = (start, stop, step) => Array.from(
-        { length: (stop - start) / step + 1 },
-        (value, index) => start + index * step
-    );
+    let dataX = aRange(minimum, maximum, 0.1);
+    let dataY = dataX.map(x => normalpdf(x, meanValue, stdevValue));
+    let ymin = min(dataY);
+    let ymax = max(dataY);
+    dataY = dataY.map(y => scalemap(y, [ymin, ymax], dotplot.getYBounds()));
 
-    let dataX = arrayRange(minimum, maximum, 0.1);
-    let dataY = dataX.map(x => normalpdf(x, meanValue, stdevValue) * 20 );
+    dataX = dataX.map((x) => dotplot.scaleX(x));
 
-    console.log(dataX);
-    console.log(dataY);
-
-    dataX = dataX.map((x) => x - xmin - 10);
-
-
-
-    let normalCurve = board.create('curve',[dataX, dataY], 
-
-    );
+    let normalCurve = board.create('curve', [dataX, dataY]);
 
     
     let meanDisplay = displayboard.create('Text', [1, 9.25, 
@@ -177,10 +183,34 @@
         () => `&sigma; = ${round(stdev(data), 2)}`], 
         { fontSize: 24, fixed: true, highlight: false });
 
-    let showNormalCurve = new CheckBox(displayboard, 
-        1, 8.25, 'Show Normal Curve', false, () => {
+    let showNormalCurve = new CheckBox(displayboard, 1, 8.25, 
+        'Show Normal Curve', false, () => {
 
-        })
+        }
+    );
+
+    let dataDisplay = displayboard2.create('Text', [0.1, 3,
+        () => `Data Set: ${data}`],
+        { fontSize: 24, fixed: true, highlight: false }
+    );
+
+    let showMeanMarking = new CheckBox(displayboard, 1, 7.5,
+        'Display the Mean', false, () => {
+
+        }
+    );
+
+    let showStdDevMarkings = new CheckBox(displayboard, 1, 6.75,
+        'Display the Standard Deviation Markings', false, () => {
+
+        }
+    );
+
+    let countDisplay = displayboard.create('text', [1, 5.5,
+        () => `Highlighted: ${highlightCount}`]);
+
+    let pctDisplay = displayboard.create('text', [1, 4.5,
+        () => `Highlighted Percent: ${highlightPct}`]);
 
     //let data = randomNormalDataSet(200, 25, 4);
     //for(let i=0; i<data.length; i++) {

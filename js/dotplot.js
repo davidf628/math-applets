@@ -22,7 +22,6 @@
 
 import { rectangle } from './rectangle.js';
 import { scalemap } from './dmath.js';
-//import { max_frequency } from './stats.js';
 
 export class DotPlot {
 
@@ -50,8 +49,16 @@ export class DotPlot {
         }
 
         // Define the local properties
+
+        // Set the bounds to have rectangular coordinates based on width and height
         this.bounds = bounds;
+        this.bounds.xmin = this.bounds.x;
+        this.bounds.xmax = this.bounds.x + this.bounds.width;
+        this.bounds.ymin = this.bounds.y + this.bounds.height;
+        this.bounds.ymax = this.bounds.y;
+
         this.scale = scale;
+
         this.data = data;
         this.points = [];
         this.tickmarks = [];
@@ -102,7 +109,12 @@ export class DotPlot {
         this.board.suspendUpdate();
 
         this.data = newData;
+        this.ymax = 0;
+
         this.scale = newScale;
+        this.scale.min = newScale.min - newScale.scale;
+        this.scale.max = newScale.max + newScale.scale;
+
         this.tickmarks.forEach(function(item) { item.setAttribute( { visible: false } )});
         this.ticklabels.forEach(function(item) { item.setAttribute( { visible: false } )});
         this.points.forEach(function(item) { item.setAttribute( { visible: false })});
@@ -112,26 +124,23 @@ export class DotPlot {
         //let xppu = this.board.canvasWidth / (box[2] - box[0]);
         let yppu = this.board.canvasHeight / (box[1] - box[3]);
 
-        // Set all the base args
-        let x = this.bounds.x;
-
         // Draw the tick marks and labels
         let nMarks = Math.ceil((this.scale.max - this.scale.min) / this.scale.scale);
-        let xDist = this.bounds.width / (nMarks + 2); // Space out the tick marks
         let tickHeight = 5 / yppu; // Make tick marks about 10 pixels
         let labelStart = 10 / yppu; // Make labels start about 10 pixes below axis
-        for(let i = 0; i <= nMarks; i++) {
+        for(let i = 1; i < nMarks; i++) {
 
             let labelText = Math.round(this.scale.min + i * this.scale.scale).toString();
+            let xLoc = scalemap(i * this.scale.scale + this.scale.min, [this.scale.min, this.scale.max], [this.bounds.xmin, this.bounds.xmax]);
 
             if(this.tickmarks[i] !== undefined) {
-                this.tickmarks[i].point1.moveTo([x + (i+1) * xDist, this.axisy + tickHeight]);
-                this.tickmarks[i].point2.moveTo([x + (i+1) * xDist, this.axisy - tickHeight]);
-                this.tickmarks[i].setAttribute( { visible: true });
+                this.tickmarks[i].point1.moveTo([xLoc, this.axisy + tickHeight]);
+                this.tickmarks[i].point2.moveTo([xLoc, this.axisy - tickHeight]);
+                this.tickmarks[i].setAttribute( { visible: true, strokeColor: 'black' });
             } else {
                 let tickmark = this.board.create('segment', [
-                    [x + (i+1) * xDist, this.axisy + tickHeight],
-                    [x + (i+1) * xDist, this.axisy - tickHeight]], {
+                    [xLoc, this.axisy + tickHeight],
+                    [xLoc, this.axisy - tickHeight]], {
                     highlight: false,
                     fixed: true,
                     strokeColor: this.axisColor
@@ -140,12 +149,12 @@ export class DotPlot {
             }
 
             if (this.ticklabels[i] !== undefined) {
-                this.ticklabels[i].moveTo([x + (i+1) * xDist, this.axisy - labelStart]);
+                this.ticklabels[i].moveTo([xLoc, this.axisy - labelStart]);
                 this.ticklabels[i].setText(labelText);
                 this.ticklabels[i].setAttribute( { visible: true });
             } else {
         
-                let ticklabel = this.board.create('text', [x + (i+1) * xDist, this.axisy - labelStart, labelText], {
+                let ticklabel = this.board.create('text', [xLoc, this.axisy - labelStart, labelText], {
                     anchorX: 'middle',
                     highlight: false,
                     fixed: true,
@@ -167,16 +176,19 @@ export class DotPlot {
 
             if (this.points[i] !== undefined) {
                 if ((value >= this.scale.min) && (value <= this.scale.max)) {
-                    let xval = scalemap(value, [this.scale.min, this.scale.max], [box[0], box[2]]);
+                    let xval = scalemap(value, [this.scale.min, this.scale.max], [this.bounds.xmin, this.bounds.xmax]);
                     let yval = this.axisy + (10 / yppu) * counts[value];
                     this.points[i].moveTo([xval, yval]);
                     this.points[i].setAttribute( { visible: true });
+                    if (yval > this.ymax) {
+                        this.ymax = yval + Number.parseInt(this.points[i].getAttribute("size")) /yppu;
+                    }
                 } else {
                     console.warn(`${value} in data set was outside the range of the dot plot scale.`);
                 }
             } else {
                 if ((value >= this.scale.min) && (value <= this.scale.max)) {
-                    let xval = scalemap(value, [this.scale.min, this.scale.max], [box[0], box[2]]);
+                    let xval = scalemap(value, [this.scale.min, this.scale.max], [this.bounds.xmin, this.bounds.xmax]);
                     let yval = this.axisy + (10 / yppu) * counts[value];
                     let point = this.board.create('point', 
                         [xval, yval], {
@@ -186,6 +198,9 @@ export class DotPlot {
                         fillColor: this.pointColor,
                         fixed: true,
                     });
+                    if (yval > this.ymax) {
+                        this.ymax = yval + Number.parseInt(point.getAttribute("size")) / yppu;
+                    }
                     this.points.push(point);
                 } else {
                     console.warn(`${value} in data set was outside the range of the dot plot scale.`);
@@ -193,6 +208,7 @@ export class DotPlot {
             }
 
         }
+
         this.board.unsuspendUpdate();
 
     }
@@ -211,6 +227,14 @@ export class DotPlot {
 
     setScale(newScale) {
         this.updatePlot(this.data, newScale);
+    }
+
+    scaleX(x) {
+        return scalemap(x, [this.scale.min, this.scale.max], [this.bounds.xmin, this.bounds.xmax]);
+    }
+
+    getYBounds() {
+        return [this.axisy, this.ymax];
     }
 
     getPoints() {

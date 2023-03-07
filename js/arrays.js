@@ -32,3 +32,17 @@ export function sort(list) {
 export function sortD(list) {
     return list.sort(function (a, b) { return b - a; });
 }
+
+/******************************************************************************
+ * Creates an array of numbers in a linear sequential order from start to
+ *  stop in increments of step
+ * @param start {number} The beginning value in the list
+ * @param stop {number} The ending value in the list
+ * @param step {number} The number of values to skip from one item to the next
+ * @returns {number[]} An array containing a list of sequential values from
+ *   start to stop in increments of step
+ */
+
+export function aRange(start, stop, step) {
+    return Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step)
+};
