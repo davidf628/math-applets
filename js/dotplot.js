@@ -54,8 +54,8 @@ export class DotPlot {
         this.bounds = bounds;
         this.bounds.xmin = this.bounds.x;
         this.bounds.xmax = this.bounds.x + this.bounds.width;
-        this.bounds.ymin = this.bounds.y + this.bounds.height;
-        this.bounds.ymax = this.bounds.y;
+        this.bounds.ymin = this.bounds.y;
+        this.bounds.ymax = this.bounds.y - this.bounds.height;
 
         this.scale = scale;
 
@@ -65,7 +65,7 @@ export class DotPlot {
         this.ticklabels = [];
         this.board = board;
 
-        this.axisy = bounds.y - 0.8 * bounds.height; // Axis to be positioned 20% from the bottom
+        this.axisy = bounds.y - 0.95 * bounds.height; // Axis to be positioned 5% from the bottom
 
         this.showBorder = args.border ? args.border : false;
         this.borderColor = args.borderColor ? args.borderColor : 'black';
@@ -233,8 +233,23 @@ export class DotPlot {
         return scalemap(x, [this.scale.min, this.scale.max], [this.bounds.xmin, this.bounds.xmax]);
     }
 
-    getYBounds() {
+    getYBoundsChart() {
         return [this.axisy, this.ymax];
+    }
+
+    getYBoundsWorld() {
+        return [
+            scalemap(this.axisy, [this.axisy, this.ymax], [this.bounds.ymin, this.bounds.ymax]),
+            scalemap(this.ymax, [this.axisy, this.ymax], [this.bounds.ymin, this.bounds.ymax])
+        ];
+    }
+
+    getXBoundsChart() {
+        return [this.scale.min, this.scale.max];
+    }
+
+    getXBoundsWorld() {
+        return [this.bounds.xmin, this.bounds.xmax];
     }
 
     getPoints() {

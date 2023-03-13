@@ -38,9 +38,9 @@
 <input type="text" id="maximum" name="maximum" size="5" value="65">&emsp;&emsp;
 
 <label for="distribution">Distribution:</label>
-<select name="distribution" id="distribution">
-    <option value="normal_a">Normal - A</option>
-    <option value="normal_b">Normal - B</option>
+<select name="distribution" id="distribution" onchange="update(true, true)">
+    <option value="normal_a">Normal</option>
+    <option value="normal_b">Normal (Box-Muller)</option>
     <option value="normal_c">Normal - C</option>
     <option value="uniform">Uniform</option>
     <option value="skewed_left">Skewed Left</option>
@@ -61,15 +61,16 @@
 <input type="text" id="xscl" name="xscl" size="5" value="5">&emsp;&emsp;
 
 <label for="highlights">Highlight Values:</label>
-<select name="highlights" id="highlights">
+<select name="highlights" id="highlights" onchange="update(false, false)">
     <option value="none">None</option>
     <option value="within1">Within 1 Standard Deviation</option>
     <option value="within2">Within 2 Standard Deviations</option>
     <option value="within3">Within 3 Standard Deviations</option>
     <option value="right1">One Std Dev to Right</option>
     <option value="left1">One Std Dev to Left</option>
-    <option value="right1-2">Two Std Dev to Right</option>
-    <option value="right2">Only 2nd Std Dev to Right</option>
+    <option value="right2">Two Std Dev to Right</option>
+    <option value="right1-2">Only 2nd Std Dev to Right</option>
+    <option value="right2-3">Only 3rd Std Dev to Right</option>
 </select>&emsp;&emsp;
 
 <input type="button" value="Update" onClick="update(false, true)">&emsp;&emsp;
@@ -89,12 +90,13 @@
     import { aRange } from './js/arrays.js';
     import { DotPlot } from './js/dotplot.js';
     import { fullscreen } from './js/helpers.js';
-    import { randomNormalDataSet, randomNormalData } from './js/random.js';
+    import { randomNormalData, randomNormal_BoxMuller } from './js/random.js';
     import { round, scalemap } from './js/dmath.js';
     import { evalstr } from './js/eval.js';
     import { mean, stdev, max, min } from './js/stats.js';
     import { normalpdf } from './js/distributions.js';
     import { CheckBox } from './js/checkbox.js';
+    import { isBetween } from './js/interval.js';
 
     let board = JXG.JSXGraph.initBoard('jxgbox', {
         boundingbox: [-10, 10, 10, -10],
@@ -144,7 +146,7 @@
     window.update = update;
     window.fullscreen = fullscreen;
 
-    // Call init to start off in order to have something too look at:
+    // Get the initial values from the input boxes and set up initial display
     let n = Number.parseInt(document.getElementById("samplesize").value);
     let minimum = Number.parseInt(document.getElementById("minimum").value);
     let maximum = Number.parseInt(document.getElementById("maximum").value);
@@ -154,63 +156,84 @@
     let xscl = Number.parseInt(document.getElementById("xscl").value);
 
     let data = randomNormalData(n, minimum, maximum);
-    let highlightCount = 0;
-    let highlightPct = 0;
+    let highlightCount = "0";
+    let highlightPct = "0.0 %";
 
-    let bounds = { x: -9, y: 8, width: 18, height: 20 };
+    const dotColor = 'lightgray';
+    const highlightColor = 'blue';
+
+    let bounds = { x: -9, y: 8, width: 18, height: 16 };
     let axis = { min: xmin, max: xmax, scale: xscl };
-    let dotplot = new DotPlot(board, bounds, axis, data, { border: false }); 
+    let dotplot = new DotPlot(board, bounds, axis, data, { border: false, pointColor: dotColor }); 
     
     let meanValue = mean(data);
     let stdevValue = stdev(data);
 
-    let dataX = aRange(minimum, maximum, 0.1);
-    let dataY = dataX.map(x => normalpdf(x, meanValue, stdevValue));
-    let ymin = min(dataY);
-    let ymax = max(dataY);
-    dataY = dataY.map(y => scalemap(y, [ymin, ymax], dotplot.getYBounds()));
+    let normalCurve = board.create('curve', generateNormalCurve(), 
+        { visible: false, strokeWidth: 3, strokeColor: 'magenta' });
 
-    dataX = dataX.map((x) => dotplot.scaleX(x));
+    let meanLine = board.create('segment', [
+        [() => scalemap(meanValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()), dotplot.getYBoundsWorld()[0]], 
+        [() => scalemap(meanValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()), dotplot.getYBoundsWorld()[1]]
+    ], { visible: false, strokeColor: 'orange', dash: 2 });
 
-    let normalCurve = board.create('curve', [dataX, dataY]);
-
+    let stdevLines = [];
+    let stdevLocs = [scalemap(meanValue - 3 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
+                     scalemap(meanValue - 2 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
+                     scalemap(meanValue - 1 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
+                     scalemap(meanValue + 1 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
+                     scalemap(meanValue + 2 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
+                     scalemap(meanValue + 3 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld())];
+    for (let i = 0; i < stdevLocs.length; i++) {
+        let line = board.create('segment', [
+            [stdevLocs[i], dotplot.getYBoundsWorld()[0]], 
+            [stdevLocs[i], dotplot.getYBoundsWorld()[1]]], 
+            { visible: false, strokeColor: 'green', dash: 2 });
+        stdevLines.push(line);
+    }
     
-    let meanDisplay = displayboard.create('Text', [1, 9.25, 
+    let meanDisplay = displayboard.create('Text', [1, 4, 
         () => `&mu; = ${round(mean(data), 2)}`], 
         { fontSize: 24, fixed: true, highlight: false });
 
-    let stdevDisplay = displayboard.create('Text', [5.5, 9.25, 
+    let stdevDisplay = displayboard.create('Text', [5.5, 4, 
         () => `&sigma; = ${round(stdev(data), 2)}`], 
         { fontSize: 24, fixed: true, highlight: false });
 
-    let showNormalCurve = new CheckBox(displayboard, 1, 8.25, 
-        'Show Normal Curve', false, () => {
-
-        }
+    let showNormalCurve = new CheckBox(displayboard, 1, 9, 
+        ' Normal Curve', false, () => {
+            normalCurve.setAttribute( { visible: !normalCurve.getAttribute("visible") });
+        }, { fontSize: 20, fixed: true, highlight: false }
     );
 
     let dataDisplay = displayboard2.create('Text', [0.1, 3,
         () => `Data Set: ${data}`],
-        { fontSize: 24, fixed: true, highlight: false }
+        { fontSize: 18, highlight: false }
     );
 
-    let showMeanMarking = new CheckBox(displayboard, 1, 7.5,
-        'Display the Mean', false, () => {
-
-        }
+    let showMeanMarking = new CheckBox(displayboard, 1, 8.25,
+        ' Mean', false, () => {
+            toggleMeanMarking();
+        },
+        { fontSize: 20 }
     );
 
-    let showStdDevMarkings = new CheckBox(displayboard, 1, 6.75,
-        'Display the Standard Deviation Markings', false, () => {
-
-        }
+    let showStdDevMarkings = new CheckBox(displayboard, 1, 7.5,
+        ' Standard Deviation', false, () => {
+            toggleStdevMarkings();
+        },
+        { fontSize: 20 }
     );
 
-    let countDisplay = displayboard.create('text', [1, 5.5,
-        () => `Highlighted: ${highlightCount}`]);
+    let countDisplay = displayboard.create('text', [1, 6.25,
+        () => `Highlighted Values: ${highlightCount}`],
+        { fontSize: 20 }
+    );
 
-    let pctDisplay = displayboard.create('text', [1, 4.5,
-        () => `Highlighted Percent: ${highlightPct}`]);
+    let pctDisplay = displayboard.create('text', [1, 5.5,
+        () => `Percent: ${highlightPct}`],
+        { fontSize: 20 }
+    );
 
     //let data = randomNormalDataSet(200, 25, 4);
     //for(let i=0; i<data.length; i++) {
@@ -225,18 +248,167 @@
         xmin = Number.parseInt(document.getElementById("xmin").value);
         xmax = Number.parseInt(document.getElementById("xmax").value);
         xscl = Number.parseInt(document.getElementById("xscl").value);
+        
+        let highlightMode = document.getElementById("highlights").value;
+        let distributionType = document.getElementById("distribution").value;
+        console.log(highlightMode);
 
         if (newData) {
-            data = randomNormalData(n, minimum, maximum);
+            data = generateRandomData(n, minimum, maximum, distributionType);
+            meanValue = mean(data);
+            stdevValue = stdev(data);
         }
 
         if (newAxis) {
             axis = { min: xmin, max: xmax, scale: xscl };
         }
         
+        // Update the dot plot itself
         dotplot.updatePlot(data, axis);
-        displayboard.update();
 
+        highlightPoints(dotplot.getPoints(), highlightMode);
+
+        // Update the normal distribution curve
+        let curveData = generateNormalCurve();
+        normalCurve.dataX = curveData[0];
+        normalCurve.dataY = curveData[1];
+        normalCurve.updateCurve();
+
+        // The line for the mean updates iself, but these update the standard dev bars
+        stdevLocs = [scalemap(meanValue - 3 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
+                     scalemap(meanValue - 2 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
+                     scalemap(meanValue - 1 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
+                     scalemap(meanValue + 1 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
+                     scalemap(meanValue + 2 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
+                     scalemap(meanValue + 3 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld())];
+        
+        stdevLines.forEach((l, i) => {
+            l.point1.moveTo([stdevLocs[i], dotplot.getYBoundsWorld()[0]]);
+            l.point2.moveTo([stdevLocs[i], dotplot.getYBoundsWorld()[1]]);
+        });
+
+        displayboard.update();
+        displayboard2.update();
+
+    }
+
+    function generateRandomData(n, mininum, maximum, distributionType) {
+    
+        data = [];
+
+        switch(distributionType) {
+            case "normal_a" :
+                data = randomNormalData(n, minimum, maximum);
+                break;
+            case "normal_b" : 
+                // Use the midrange to estimate the mean and the range rule of
+                // thumb for the standard devation
+                let range = maximum - minimum;
+                data = randomNormal_BoxMuller(n, range / 2, range / 4);
+                data = data.map((x) => round(x));
+                xmin = min(data);
+                xmax = max(data);
+                break;
+            default :
+                break;
+        }
+
+        return data;
+    }
+
+    function highlightPoints(points, highlightMode) {
+        let lowerbound = Number.POSITIVE_INFINITY;
+        let upperbound = Number.NEGATIVE_INFINITY;
+        switch(highlightMode) {
+
+            case "within1" :
+                lowerbound = meanValue - stdevValue;
+                upperbound = meanValue + stdevValue;
+                break;
+
+            case "within2" :
+                lowerbound = meanValue - 2 * stdevValue;
+                upperbound = meanValue + 2 * stdevValue;
+                break;
+
+            case "within3" :
+                lowerbound = meanValue - 3 * stdevValue;
+                upperbound = meanValue + 3 * stdevValue;
+                break;
+
+            case "right1" :
+                lowerbound = meanValue;
+                upperbound = meanValue + stdevValue;
+                break;
+            
+            case "left1" :
+                lowerbound = meanValue - stdevValue;
+                upperbound = meanValue;
+                break;
+
+            case "right2" :
+                lowerbound = meanValue;
+                upperbound = meanValue + 2 * stdevValue;
+                break;
+
+            case "right1-2" :
+                lowerbound = meanValue + stdevValue;
+                upperbound = meanValue + 2 * stdevValue;
+                break;
+
+            case "right2-3" :
+                lowerbound = meanValue + 2 * stdevValue;
+                upperbound = meanValue + 3 * stdevValue;
+                break;
+
+            default :
+                lowerbound = Number.POSITIVE_INFINITY;
+                upperbound = Number.NEGATIVE_INFINITY;
+                break;
+        }
+
+        highlightCount = 0;
+
+        points.forEach((point, i) => {
+            let xval = scalemap(point.X(), dotplot.getXBoundsWorld(), dotplot.getXBoundsChart());
+            if(isBetween(xval, lowerbound, upperbound)) {
+                point.setAttribute( { strokeColor: highlightColor, color: highlightColor });
+                highlightCount += 1;
+            } else {
+                point.setAttribute( { strokeColor: dotColor, color: dotColor });
+            }
+        });
+
+        highlightPct = `${round(highlightCount / n * 100, 1)} %`;
+
+    }
+
+    function generateNormalCurve() {
+
+        // First get a range of x-values in chart coordinates
+        let xmin = dotplot.getXBoundsChart()[0];
+        let xmax = dotplot.getXBoundsChart()[1];
+        let dataX = aRange(xmin, xmax, 0.1);
+
+        // Then get the y-values associated with each of those
+        let dataY = dataX.map(x => normalpdf(x, meanValue, stdevValue));
+
+        // Now re-scale the y-values to the world coordinates
+        let ymin = min(dataY);
+        let ymax = max(dataY);
+        dataY = dataY.map(y => scalemap(y, [ymin, ymax], dotplot.getYBoundsChart()));
+
+        // Finally convert the x-values to world coordinates as well
+        dataX = dataX.map(x => dotplot.scaleX(x));
+        return [dataX, dataY];
+    }
+
+    function toggleMeanMarking() {
+        meanLine.setAttribute( { visible: !meanLine.getAttribute("visible")});
+    }
+
+    function toggleStdevMarkings() {
+        stdevLines.forEach((l) => { l.setAttribute( { visible: !l.getAttribute("visible")}) });
     }
 
 </script>

@@ -62,7 +62,7 @@ function getNormallyDistributedRandomNumber(mean, stddev) {
     return z0 * stddev + mean;
 }
 
-export function randomNormalDataSet(n, mean, stdev) {
+export function randomNormal_BoxMuller(n, mean, stdev) {
     const generatedNumbers = [];
     for (let i = 0; i < n; i += 1) {
         generatedNumbers.push(getNormallyDistributedRandomNumber(mean, stdev));

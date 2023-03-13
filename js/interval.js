@@ -152,4 +152,21 @@ export function isAsymptote(relation) {
 
 }
 
+/******************************************************************************
+ * Determines if a value exists between two values, assumes an open interval.
+ *  However, an additional parameter can be supplied indicating if the
+ *  interval is closed.
+ * @param x {number} The value to test
+ * @param lower {number} The lower bound of the interval
+ * @param upper {number} The upper bound of the interval
+ * @param closed {boolean} Set to true if you want the bounds included
+ * @returns true if x is on the interval, and false otherwise
+ */
 
+export function isBetween(x, lower, upper, closed) {
+    if (closed) {
+        return (x >= lower) && (x <= upper);
+    } else {
+        return (x > lower) && (x < upper);
+    }
+}
