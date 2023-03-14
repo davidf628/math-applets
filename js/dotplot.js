@@ -112,8 +112,6 @@ export class DotPlot {
         this.ymax = 0;
 
         this.scale = newScale;
-        this.scale.min = newScale.min - newScale.scale;
-        this.scale.max = newScale.max + newScale.scale;
 
         this.tickmarks.forEach(function(item) { item.setAttribute( { visible: false } )});
         this.ticklabels.forEach(function(item) { item.setAttribute( { visible: false } )});

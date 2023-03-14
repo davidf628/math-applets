@@ -12,6 +12,18 @@ export function randomInteger(a, b) {
 }
 
 /******************************************************************************
+ * Creates a set of random integers between a minimum and maximum value
+ * @param a {number} Lower bound for random values
+ * @param b {number} Upper bound for random values
+ * @param n {number} The number of random values to include
+ * @return Array of randomly selected integers
+ */
+
+export const randomIntegers = (a, b, n) => {
+    return Array.from({ length: n }, (x) => randomInteger(a, b));
+}
+
+/******************************************************************************
  * Creates a random float between a and b, inclusive
  * @param a {number} minimum value for the random number
  * @param b {number} maximum value for the random number
@@ -29,7 +41,7 @@ export function randomFloat(a, b) {
  * @return {number[]}
  */
 
-export function randomNormalData(size, min, max) {
+export function randomNormal(size, min, max) {
     let population = [];
     let total = 0;
     let p = 0.5;
