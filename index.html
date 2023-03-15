@@ -18,6 +18,9 @@
     <!-- jStat -->
     <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.5/dist/jstat.min.js"></script>
 
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
     <!-- Set a browser icon to use -->
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
@@ -31,10 +34,10 @@
 <label for="samplesize">Sample Size:</label>
 <input type="text" id="samplesize" name="samplesize" size="5" value="250">&emsp;&emsp;
 
-<label for="minimum">Min Value:</label>
+<label for="minimum" id="minlabel">Min Value:</label>
 <input type="text" id="minimum" name="minimum" size="5" value="25">&emsp;&emsp;
 
-<label for="maximmum">Max Value:</label>
+<label for="maximmum" id="maxlabel">Max Value:</label>
 <input type="text" id="maximum" name="maximum" size="5" value="65">&emsp;&emsp;
 
 <label for="distribution">Distribution:</label>
@@ -95,7 +98,7 @@
     import { evalstr } from './js/eval.js';
     import { mean, stdev, max, min } from './js/stats.js';
     import { normalpdf } from './js/distributions.js';
-    import { CheckBox } from './js/CheckBox.js';
+    import { CheckBox } from './js/checkbox.js';
     import { isBetween } from './js/interval.js';
 
     let board = JXG.JSXGraph.initBoard('jxgbox', {
@@ -235,22 +238,16 @@
         { fontSize: 20 }
     );
 
-    //let data = randomNormalDataSet(200, 25, 4);
-    //for(let i=0; i<data.length; i++) {
-    //  data[i] = round(data[i]);
-    //}
-    //console.log(round(25.5));
-
     function update(newData, newAxis) {
 
         board.suspendUpdate();
 
         n = Number.parseInt(document.getElementById("samplesize").value);
-        minimum = Number.parseInt(document.getElementById("minimum").value);
-        maximum = Number.parseInt(document.getElementById("maximum").value);
-        xmin = Number.parseInt(document.getElementById("xmin").value);
-        xmax = Number.parseInt(document.getElementById("xmax").value);
-        xscl = Number.parseInt(document.getElementById("xscl").value);
+        minimum = Number.parseFloat(document.getElementById("minimum").value);
+        maximum = Number.parseFloat(document.getElementById("maximum").value);
+        xmin = Number.parseFloat(document.getElementById("xmin").value);
+        xmax = Number.parseFloat(document.getElementById("xmax").value);
+        xscl = Number.parseFloat(document.getElementById("xscl").value);
         
         let highlightMode = document.getElementById("highlights").value;
         let distributionType = document.getElementById("distribution").value;
@@ -301,21 +298,35 @@
         data = [];
 
         switch(distributionType) {
+
             case "normal_a" :
+                $("#minlabel")[0].innerHTML = "Min Value: ";
+                $("#maxlabel")[0].innerHTML = "Max Value: ";
                 data = randomNormal(n, minimum, maximum);
                 break;
+
             case "normal_b" : 
-                // Use the midrange to estimate the mean and the range rule of
-                // thumb for the standard devation
-                let range = maximum - minimum;
-                data = randomNormal_BoxMuller(n, range / 2, range / 4);
+
+                // Change the minimum and maxmimum boxes to read mean and
+                // standard deviation since that makes more sense with box-muller
+                $("#minlabel")[0].innerHTML = "Mean: ";
+                $("#maxlabel")[0].innerHTML = "Std Dev: ";
+
+                let temp_mean = minimum;
+                let temp_stdev = maximum;
+                data = randomNormal_BoxMuller(n, temp_mean, temp_stdev);
+
                 data = data.map((x) => round(x));
                 xmin = min(data);
                 xmax = max(data);
                 break;
+
             case "uniform" :
+                $("#minlabel")[0].innerHTML = "Min Value: ";
+                $("#maxlabel")[0].innerHTML = "Max Value: ";
                 data = randomIntegers(minimum, maximum, n);
                 break;
+
             default :
                 break;
         }
