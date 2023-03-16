@@ -41,7 +41,7 @@
 <input type="text" id="maximum" name="maximum" size="5" value="65">&emsp;&emsp;
 
 <label for="distribution">Distribution:</label>
-<select name="distribution" id="distribution" onchange="update(true, true)">
+<select name="distribution" id="distribution" onchange="updateInputLabels()">
     <option value="normal_a">Normal</option>
     <option value="normal_b">Normal (Box-Muller)</option>
     <option value="normal_c">Normal - C</option>
@@ -85,21 +85,21 @@
 <div>
     <div id='jxgbox' class='jxgbox' style='width:900px; height:600px; float: left; resize: both'></div>
     <div id='displayboard' class='jxgbox' style='width: 320px; height: 600px; float: left; resize: both'></div>
-    <div id='displayboard2' class='jxgbox' style='width: 1220px; height: 100px; float: left; resize: both'></div>
 </div>
 
 <script type="module">
 
     import { aRange } from './js/arrays.js';
-    import { DotPlot } from './js/dotplot.js';
-    import { fullscreen } from './js/helpers.js';
-    import { randomNormal, randomNormal_BoxMuller, randomIntegers } from './js/random.js';
-    import { round, scalemap } from './js/dmath.js';
-    import { evalstr } from './js/eval.js';
-    import { mean, stdev, max, min } from './js/stats.js';
-    import { normalpdf } from './js/distributions.js';
     import { CheckBox } from './js/checkbox.js';
+    import { normalpdf } from './js/distributions.js';
+    import { round, scalemap } from './js/dmath.js';
+    import { DotPlot } from './js/dotplot.js';
+    import { evalstr } from './js/eval.js';
+    import { makepretty } from './js/format.js';
+    import { fullscreen } from './js/helpers.js';
     import { isBetween } from './js/interval.js';
+    import { randomNormal, randomNormal_BoxMuller, randomIntegers } from './js/random.js';
+    import { mean, stdev, max, min } from './js/stats.js';
 
     let board = JXG.JSXGraph.initBoard('jxgbox', {
         boundingbox: [-10, 10, 10, -10],
@@ -117,21 +117,6 @@
 
     let displayboard = JXG.JSXGraph.initBoard('displayboard', {
         boundingbox: [0, 10, 10, 0],
-        axis: false,
-        showNavigation: false,
-        showCopyright: false,
-        keepaspectratio: false,
-        showClearTraces: false,
-        zoom: {
-            enabled: false
-        },
-        pan: {
-            enabled: false
-        }
-    });
-
-    let displayboard2 = JXG.JSXGraph.initBoard('displayboard2', {
-        boundingbox: [0, 5, 5, 0],
         axis: false,
         showNavigation: false,
         showCopyright: false,
@@ -175,25 +160,74 @@
     let normalCurve = board.create('curve', generateNormalCurve(), 
         { visible: false, strokeWidth: 3, strokeColor: 'magenta' });
 
-    let meanLine = board.create('segment', [
-        [() => scalemap(meanValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()), dotplot.getYBoundsWorld()[0]], 
-        [() => scalemap(meanValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()), dotplot.getYBoundsWorld()[1]]
-    ], { visible: false, strokeColor: 'orange', dash: 2 });
-
     let stdevLines = [];
-    let stdevLocs = [scalemap(meanValue - 3 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
-                     scalemap(meanValue - 2 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
-                     scalemap(meanValue - 1 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
-                     scalemap(meanValue + 1 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
-                     scalemap(meanValue + 2 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
-                     scalemap(meanValue + 3 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld())];
-    for (let i = 0; i < stdevLocs.length; i++) {
+    let stdevLabel1 = [];
+    let stdevLabel2 = [];
+
+    let stdevLocs = [ meanValue - 3 * stdevValue,
+                      meanValue - 2 * stdevValue,
+                      meanValue - 1 * stdevValue,
+                      meanValue,
+                      meanValue + 1 * stdevValue,
+                      meanValue + 2 * stdevValue,
+                      meanValue + 3 * stdevValue ];
+
+    stdevLocs.forEach((value, i) => {
+
+        let xVal = scalemap(value, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld());
+
         let line = board.create('segment', [
-            [stdevLocs[i], dotplot.getYBoundsWorld()[0]], 
-            [stdevLocs[i], dotplot.getYBoundsWorld()[1]]], 
-            { visible: false, strokeColor: 'green', dash: 2 });
+            [xVal, dotplot.getYBoundsWorld()[0]], 
+            [xVal, dotplot.getYBoundsWorld()[1]]
+        ], { visible: false, strokeColor: 'green', dash: 2 });
         stdevLines.push(line);
-    }
+
+        let label1 = board.create('text', [
+            () => line.point1.X(),
+            () => line.point1.Y() + 1,
+            () => {
+                switch (i) {
+                    case 0:
+                        return `<i>&mu; - 3&sigma;</i>`;
+                        break;
+                    case 1:
+                        return `<i>&mu; - 2&sigma;</i>`;
+                        break;
+                    case 2:
+                        return `<i>&mu; - &sigma;</i>`;
+                        break;
+                    case 3:
+                        return `<i>&mu;</i>`;
+                        break;
+                    case 4:
+                        return `<i>&mu; + &sigma;</i>`;
+                        break;
+                    case 5:
+                        return `<i>&mu; + 2&sigma;</i>`;
+                        break;
+                    case 6:
+                        return `<i>&mu; + 3&sigma;</i>`;
+                        break;
+                    default :
+                        return '';
+                        break;
+                }
+            }
+        ], { fontSize: 18, color: 'green', visible: false, anchorX: 'middle' });
+        stdevLabel1.push(label1);
+
+        let label2 = board.create('text', [
+            () => line.point1.X(),
+            () => line.point2.Y() - 1,
+            () => round(value, 2)
+        ], { fontSize: 18, color: 'green', visible: false, anchorX: 'middle' });
+        stdevLabel2.push(label2);
+
+    });
+
+    stdevLines[3].setAttribute({ color: 'orange' });
+    stdevLabel1[3].setAttribute({ color: 'orange' });
+    stdevLabel2[3].setAttribute({ color: 'orange' });
     
     let meanDisplay = displayboard.create('Text', [1, 4, 
         () => `&mu; = ${round(mean(data), 2)}`], 
@@ -207,11 +241,6 @@
         ' Normal Curve', false, () => {
             normalCurve.setAttribute( { visible: !normalCurve.getAttribute("visible") });
         }, { fontSize: 20, fixed: true, highlight: false }
-    );
-
-    let dataDisplay = displayboard2.create('Text', [0.1, 3,
-        () => `Data Set: ${data}`],
-        { fontSize: 18, highlight: false }
     );
 
     let showMeanMarking = new CheckBox(displayboard, 1, 8.25,
@@ -274,20 +303,25 @@
         normalCurve.updateCurve();
 
         // The line for the mean updates iself, but these update the standard dev bars
-        stdevLocs = [scalemap(meanValue - 3 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
-                     scalemap(meanValue - 2 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
-                     scalemap(meanValue - 1 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
-                     scalemap(meanValue + 1 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
-                     scalemap(meanValue + 2 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld()),
-                     scalemap(meanValue + 3 * stdevValue, dotplot.getXBoundsChart(), dotplot.getXBoundsWorld())];
+        stdevLocs = [ meanValue - 3 * stdevValue,
+                      meanValue - 2 * stdevValue,
+                      meanValue - 1 * stdevValue,
+                      meanValue,
+                      meanValue + 1 * stdevValue,
+                      meanValue + 2 * stdevValue,
+                      meanValue + 3 * stdevValue ];
         
         stdevLines.forEach((l, i) => {
-            l.point1.moveTo([stdevLocs[i], dotplot.getYBoundsWorld()[0]]);
-            l.point2.moveTo([stdevLocs[i], dotplot.getYBoundsWorld()[1]]);
+            let xVal = scalemap(stdevLocs[i], dotplot.getXBoundsChart(), dotplot.getXBoundsWorld());
+            l.point1.moveTo([xVal, dotplot.getYBoundsWorld()[0]]);
+            l.point2.moveTo([xVal, dotplot.getYBoundsWorld()[1]]);
         });
 
+        stdevLabel2.forEach((textItem, i) => {
+            textItem.setText(round(stdevLocs[i], 2));
+        })
+
         displayboard.update();
-        displayboard2.update();
 
         board.unsuspendUpdate();
 
@@ -300,17 +334,10 @@
         switch(distributionType) {
 
             case "normal_a" :
-                $("#minlabel")[0].innerHTML = "Min Value: ";
-                $("#maxlabel")[0].innerHTML = "Max Value: ";
                 data = randomNormal(n, minimum, maximum);
                 break;
 
             case "normal_b" : 
-
-                // Change the minimum and maxmimum boxes to read mean and
-                // standard deviation since that makes more sense with box-muller
-                $("#minlabel")[0].innerHTML = "Mean: ";
-                $("#maxlabel")[0].innerHTML = "Std Dev: ";
 
                 let temp_mean = minimum;
                 let temp_stdev = maximum;
@@ -322,8 +349,6 @@
                 break;
 
             case "uniform" :
-                $("#minlabel")[0].innerHTML = "Min Value: ";
-                $("#maxlabel")[0].innerHTML = "Max Value: ";
                 data = randomIntegers(minimum, maximum, n);
                 break;
 
@@ -401,6 +426,38 @@
 
     }
 
+    // Changes the label on some input boxes because a minimum and maximum
+    //  value supplied to some randomization algorithms make sense, whereas
+    //  others a mean and standard deviation make more sense
+
+    window.updateInputLabels = function() {
+
+        let distributionType = $("#distribution")[0].value;
+
+        switch(distributionType) {
+
+            case "normal_a" :
+                $("#minlabel")[0].innerHTML = "Min Value: ";
+                $("#maxlabel")[0].innerHTML = "Max Value: ";
+                break;
+
+            case "normal_b" : 
+                $("#minlabel")[0].innerHTML = "Mean: ";
+                $("#maxlabel")[0].innerHTML = "Std Dev: ";
+                break;
+
+            case "uniform" :
+                $("#minlabel")[0].innerHTML = "Min Value: ";
+                $("#maxlabel")[0].innerHTML = "Max Value: ";
+                break;
+
+            default :
+                break;
+        }
+
+    }
+
+
     function generateNormalCurve() {
 
         // First get a range of x-values in chart coordinates
@@ -422,11 +479,31 @@
     }
 
     function toggleMeanMarking() {
-        meanLine.setAttribute( { visible: !meanLine.getAttribute("visible")});
+        stdevLines[3].setAttribute( { visible: !stdevLines[3].getAttribute("visible")});
+        stdevLabel1[3].setAttribute( { visible: !stdevLabel1[3].getAttribute("visible")});
+        stdevLabel2[3].setAttribute( { visible: !stdevLabel2[3].getAttribute("visible")});
     }
 
     function toggleStdevMarkings() {
-        stdevLines.forEach((l) => { l.setAttribute( { visible: !l.getAttribute("visible")}) });
+        stdevLines.forEach((l, i) => { 
+            if(i != 3) {
+                l.setAttribute( { visible: !l.getAttribute("visible")});
+            }   
+        });
+        stdevLabel1.forEach((label, i) => { 
+            if(i != 3) {
+                label.setAttribute( { visible: !label.getAttribute("visible")});
+            }
+        });
+        stdevLabel2.forEach((label, i) => { 
+            if(i != 3) {
+                label.setAttribute( { visible: !label.getAttribute("visible")});
+            }
+        });
+    }
+
+    window.thething = function () {
+        console.log("HI");
     }
 
 </script>

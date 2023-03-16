@@ -110,6 +110,10 @@ export function cbrt(x) {
     return Math.pow(x, 1 / 3);
 }
 
+export function abs(x) {
+    return Math.abs(x);
+}
+
 /******************************************************************************
  * Determines which quadrant a point lies in for a standard two-dimensional
  *  array
