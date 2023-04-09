@@ -2,5 +2,11 @@
   "dependencies": {
     "mathjs": "^11.5.1"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@babel/cli": "^7.21.0",
+    "@babel/core": "^7.21.4",
+    "@babel/preset-env": "^7.21.4",
+    "@babel/preset-typescript": "^7.21.4"
+  }
 }
