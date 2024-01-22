@@ -1,7 +1,7 @@
 //import { evaluate } from 'mathjs';
 import { isPoint, isAsymptote } from './interval.js';
 
-/******************************************************************************
+/**
  * This function will evaluate a mathematical expression, which can include
  * variables, as long as their values are specified within the object scope.
  * The function also catches any errors and just return NaN instead of throwing
@@ -137,7 +137,7 @@ export function evalfunc(f, x, args) {
  * with mathematics.
  * @expr {string} the mathematical expression to correct the logarithm names
  */
-function replace_logarithms(expr) {
+export function replace_logarithms(expr) {
 	// Find and replace the logarithm names, be sure to do this in the correct
 	// order or else the names might mess themselves up.
 	expr = expr.replace(/log\(/g, 'log10(');

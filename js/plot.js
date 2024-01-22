@@ -1,34 +1,89 @@
+
+/**
+ * All of these applets use a standardized method of creating and evaluating
+ * functions from strings. Here is an overview of the notation used:
+ * 
+ * Functions: (independent count: 1, dependent count: 1)
+ * ---------
+ *   - y = 2x-5  or f(x)=2x-5: both will be interpreted as a fuction of x and
+ *       defined on the interval x in (-oo, oo)
+ *   - x = 2y+5  or g(y) =3y+4: both will be interpreted as functions of y
+ *       and defined on the interval y in (-oo, oo)
+ *   - y = x^2 - 1 (-3, 8]: interpreted as a function of x defined on the 
+ *       interval from x = -3 to x = 8
+ *   Notes: oo can be used to represent infinity, and any variable names
+ *    can be used as long as the independent and dependent variable are
+ *    well defined
+ * 
+ * Parametric Equations: (independent count: 1, dependent count: 2)
+ * --------------------
+ *   - <t, t^2-1>: interpreted as a pair of parametric equations (vector-
+ *       valued functions) with parameter t. The domain of t is assumed (-oo, oo)
+ *   - <2t, -8t-1> (-4, 3]: parametric equations where the parameter t
+ *       is restricted from t = -4 to t = 3
+ * 
+ * Implicit Equations: (independent count: 2, dependent count: 1)
+ * ------------------
+ *   - x^2+xy^3=4
+ *   Notes: restricted intervals are ignored
+ * 
+ * Points:
+ * ------
+ *   - (2, -4): a closed point to draw on the graph
+ *   - [3, 6]: an open point to draw on a graph
+ * 
+ * Asymptotes:
+ * ----------
+ *   - x != 5: the location of a vertical asymptote
+ *   - x != {5, -1, 0}: the location of many vertical asymptotes
+ * 
+ * Sequential Plots:
+ * ----------------
+ *   - a=2n+1: a sequential graph plot
+ * 
+ * Piecewise Defined Functions:
+ * ---------------------------
+ *   - Piecewise defined functions can contain many of the above items
+ *     collected together in curly braces
+ *   - { (2,5); (-3, 1); (6,10) }: plots a set of points
+ *   - { 1 / (x+1)^2; x!=-1 }: Graphs a rational with an asymptote
+ *   - { 2x (-oo,4); x^2-1 [4, 5]; -x+4 (5,oo) }: piecewise defined function
+ * 
+ * 
+ * All graphs can be drawn using solid or dashed lines, and a step interval
+ * may be specified
+ * 
+ * A graph will consist of just a piece of a curve. However, the plot routine
+ * can return an array of pieces of graphs, points, and asymptotes as an array.
+ * 
+ */
+
+import { 
+    isImplicitEquation, 
+    getVariables, 
+    getFunctionName,
+    removeFunctionName,
+} from './functions.js';
+
+import { evalstr, replace_logarithms } from './eval.js';
+
 // Dependencies:
 //
 //  - jsxgraph is required for any jsx functions
 //  - math.js is required for evaluations and drawing graphs
 
 // Useful constants
+let dashsetting = 3;
 
+/**
+ * Plots a function, it can restrict to a specified interval but if open/closed
+ * endpoints are needed they must be created elsewhere.
+ * @param {JSXGraph.board} board 
+ * @param {string} relation 
+ * @param {object} args 
+ */
 
-
-dashsetting = 3;
-
-
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// Plots a function, it can restrict to a specified interval or display
-//   the function over the entire real line.
-//
-// A curve must be provided to update - which means the curve must be
-//   initialized by the board to begin with.
-//
-// Optionally, a point for a lower endpoint, upper endpoint and hole in the
-//   graph can be provided, but this is not a requirement.
-//
-///////////////////////////////////////////////////////////////////////////////
-
-export function plot_function(curve, relation, start_x, end_x, args) {
+export function plot_function(board, relation, args) {
 
 	if(args === undefined) {
 		args = {};
@@ -49,6 +104,8 @@ export function plot_function(curve, relation, start_x, end_x, args) {
 
 	var restricted_interval = false;
 
+    curve = board.create('curve', [0, 0], 0, 0, { visible: false });
+
 	curve.setAttribute({ strokeWidth: width, strokeColor: color });
 	if(dashed) {
 		curve.setAttribute({ dash: dashsetting });
@@ -57,7 +114,7 @@ export function plot_function(curve, relation, start_x, end_x, args) {
 	}
 
 	// math.js does not support ln notation
-	relation = relation.replace(/ln/g, "log");
+	relation = replace_logarithms(relation.replace);
 
 	// If the relation is blank but not the interval then we just
 	// need to plot a single point or an asymptote
@@ -1078,33 +1135,49 @@ me.px = 300; me.py = 300;
 
 
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Plots a relation in two dimensions. The format of the input is expected to
-//    be one of the following formats:
-//
-//          y = f(x), or just f(x) - for standard rectangular functions
-//          r = f(t) - for polar equations
-//          [ x(t), y(t) ] - for parametric equations
-//          x = g(y) - for rectangular equations rotated by 90 degrees
-//          *** functionality for general equations to come at a later time
-//
-//    Rectangular functions can be plotted on a restricted interval
-//
-//    Polar and parametric equations must have an interval of t provided to
-//        plot over
-//
-//    If no equals sign is provided, it is assumed that the function is a
-//        rectangular function of x.
-//
-//
-///////////////////////////////////////////////////////////////////////////////
+/**
+ * Plots a relation in two dimensions. The format of the input is expected to
+ *    be one of the following formats:
+ *
+ *          y = f(x), or just f(x) - for standard rectangular functions
+ *          r = f(t) - for polar equations
+ *          [ x(t), y(t) ] - for parametric equations
+ *          x = g(y) - for rectangular equations rotated by 90 degrees
+ *          implicity defined functions such as x^2 + y^2 = 4
+ *
+ *    Rectangular functions can be plotted on a restricted interval
+ *
+ *    Polar and parametric equations must have an interval of t provided to
+ *        plot over
+ *
+ *    If no equals sign is provided, it is assumed that the function is a
+ *        rectangular function of x.
+ * 
+ * @param {JSXGraph.board} board - the JSXGraph board to draw the function on
+ * @param {string} relation - a string containing the function to draw
+ * @param {object} args - an object containing one or more arguments to define
+ *    how the curve is drawn. Possiblities are:
+ *      color (string) - the color of the curve
+ *	    interval (string) - a restriction on the independent variable for 
+ *         drawing the curve such as (-4,5]. Open and closed circles are drawn
+ *	    density (float) - the step interval to pick new points
+ *	    width (float) - the width of the curve
+ *	    ??? lowerendpoint/upperendpoints - references to a circle object for 
+ *         an open/closed interval
+ *      ??? hole - a reference to a hole in the graph on the interval 
+ *	    ??? var yMax = args.yMax ? args.yMax : 10;
+ *	    ??? var yMin = args.yMin ? args.yMin : -10;
+ *	    ??? var yScl = args.yScl ? args.yScl : 1;
+ *	    variable (string) - the depended variable
+ *	    dashed (boolean) - whether the funciton should be dashed or solid
+ * 
+ * @returns - a reference to the curve drawn
+ */
 
-export function plot(curve, relation, start_x, end_x, args) {
+export function plot(board, relation, args) {
 
-	if(args === undefined) {
-		var args = {};
-	}
+    args = args ? args : {};
+    args.interval = args.interval ? args.interval : '';
 
 	var holeloc = '';
 	var endpoints = [];
@@ -1116,11 +1189,14 @@ export function plot(curve, relation, start_x, end_x, args) {
 	}
 
 	// math.js does not support ln notation for natural logarithm
-	relation = relation.replace(/ln/g, "log");
+    relation = replace_logarithms(relation);
 
 	if (relation == '' && args.interval != '') {
 
 		// This is just a point, just determine if it's open or closed and plot
+
+        // TODO: This should be corrected to allow the relation to look like:
+        //      (2,5), or [2,5] in order to draw an open or closed point
 
 		var interval = args.interval.trim();
 		var closed = false;
@@ -1182,7 +1258,7 @@ export function plot(curve, relation, start_x, end_x, args) {
 				// Plot: horizontal line
 				if(fname == 'y') {
 					args.density = 1;
-					plot_function(curve, relation, start_x, end_x, args);
+					curve = plot_function(board, relation, args);
 				}
 
 				// Plot vertical line

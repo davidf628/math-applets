@@ -7,7 +7,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function JSXGetBounds(board) {
+export function JSXGetBounds(board) {
 	var bounds = board.getBoundingBox();
 	var box = {
 			xmin: bounds[0],
@@ -27,7 +27,7 @@ function JSXGetBounds(board) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function JSXSetBounds(board, bounds, keepAspectRatio) {
+export function JSXSetBounds(board, bounds, keepAspectRatio) {
 
 	var box = JSXGetBounds(board);
 

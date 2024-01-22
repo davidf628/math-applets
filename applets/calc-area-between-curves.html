@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+
+	<title>Area Between Two Curves</title>
+	<meta charset="utf-8">  
+
+		<!-- JSX Graph -->
+		<script type="text/javascript" charset="UTF-8" src="https://cdn.jsdelivr.net/npm/jsxgraph@1.4.3/distrib/jsxgraphcore.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph@1.4.3/distrib/jsxgraph.css" />
+
+		<!-- Math.js -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.5.0/math.min.js"></script>
+
+	</meta>
+</head>
+
+<body>
+
+<h1>Disk and Shell Method Formulas</h1>
+Y Minimum = <input type="text" id="lower_bound" value="">
+&emsp;&emsp;Y Maximum = <input type="text" id="upper_bound" value="">
+&emsp;&emsp;<input type="button" value="Update" onClick="update()">
+&emsp;&emsp;<button onclick="fullscreen()">Toggle FullScreen</button>
+<br />
+X Minimum = <input type="text" id="left_bound" value="">
+&emsp;&emsp;X Maximum = <input type="text" id="right_bound" value="">
+<br />
+Slider Min = <input type="text" id="slider_min" value="0">
+&emsp;&emsp;Slider Max = <input type="text" id="slider_max" value="10">
+&emsp;&emsp;<input type="button" value="Toggle Zoom Panel" onClick="toggle_zoomPanel()">
+<br /><br />
+
+<div id="jxgbox" class="jxgbox" style="width:1000px; height:720px; float:left"></div>
+<div id="display" class="jxgbox" style="width:320px; height:720px; float:left"></div>
+
+<script type='module'>
+
+    import { evalstr } from '../js/eval.js';
+    import { setupZoomPanel, toggle_zoomPanel } from '../js/helpers.js';
+    import { CheckBox } from '../js/checkbox.js';
+    import { plot } from '../js/plot.js';
+    import { JSXGetBounds } from '../js/misc.js';
+
+    let board = JXG.JSXGraph.initBoard('jxgbox', {
+        boundingbox: [-10,10,10,-10], 
+        showCopyright: false, 
+        showNavigation: true,
+        keepaspectratio: true,
+        axis: true,
+        zoom: {
+            factorX: 1.25,
+            factorY: 1.25,
+            wheel: true,
+            needshift: false,
+            eps: 0.1
+        },
+        selection: { enabled: false }
+    });
+	
+    let controlboard = JXG.JSXGraph.initBoard('display', {
+        boundingbox: [0,10,10,0], 
+        showCopyright: false, 
+        showNavigation: false,
+        keepaspectratio: false,
+        axis: false,
+        pan: { enabled: false }
+    });	
+			
+    // Set up x and y zoom sliders
+    window.setupZoomPanel = setupZoomPanel(board, { visible: false, xinit: 20, yinit: 20 });
+    window.toggle_zoomPanel = toggle_zoomPanel;
+    window.update = update;
+
+    // Initialize boundaries so that we have something we can update
+    let boundaries = [];
+    boundaries[0] = board.create('curve', [0, 0], 0, 0, { visible: false });
+    boundaries[1] = board.create('curve', [0, 0], 0, 0, { visible: false });
+    boundaries[2] = board.create('curve', [0, 0], 0, 0, { visible: false });
+    boundaries[3] = board.create('curve', [0, 0], 0, 0, { visible: false });
+
+    let slider_min = parseInt(document.getElementById('slider_min').value);
+    let slider_max = parseInt(document.getElementById('slider_max').value);
+    let slider_avg = (slider_min + slider_max) / 2;
+
+    let slider = controlboard.create('slider', [ [1, 9], [8, 9], 
+        [slider_min, slider_avg, slider_max] ], { withLabel: true });
+    slider.on('drag', function() { board.update(); });
+
+    let txt1 = controlboard.create('text', [1, 4, 'Rectangle Orientation:'], { fontSize: 18, fixed: true });
+
+    let vertical_rectangle = new CheckBox(controlboard, 2, 3.5, 'Vertical', true,
+        function() {
+            vertical_rectangle.set(true);
+            horizontal_rectangle.set(false);
+            set_method()
+            update();
+        }, 
+        { fontSize: 18, fixed: true }
+    );
+    
+    let horizontal_rectangle = new CheckBox(controlboard, 2, 3, 'Horizontal', false,
+        function() {
+            horizontal_rectangle.set(true);
+            vertical_rectangle.set(false);
+            set_method();
+            update();
+        },
+        { fontSize: 18, fixed: true }
+    );
+
+    let txt2 = controlboard.create('text', [1, 2, 'Axis of Rotation:'], { fontSize: 18, fixed: true });
+
+    let cb_vertical_axis = new CheckBox(controlboard, 2, 1.5, 'Vertical', false,
+        function() {
+            cb_vertical_axis.set(true);
+            cb_horizontal_axis.set(false);
+            cb_no_axis.set(false);
+            horizontal_axis.setAttribute({ visible: false });
+            horiz_axis_loc.setAttribute({ visible: false });
+            vertical_axis.setAttribute({ visible: true });
+            vert_axis_loc.setAttribute({ visible: true });
+            set_method();
+            update();
+        },
+        { fontSize: 18, fixed: true }
+    );
+    
+    let cb_horizontal_axis = new CheckBox(controlboard, 2, 1, 'Horizontal', true,
+        function() {
+            cb_vertical_axis.set(false);
+            cb_horizontal_axis.set(true);
+            cb_no_axis.set(false);
+            horizontal_axis.setAttribute({ visible: true });
+            horiz_axis_loc.setAttribute({ visible: true });
+            vertical_axis.setAttribute({ visible: false });
+            vert_axis_loc.setAttribute({ visible: false });
+            set_method();
+            update();
+        },
+        { fontSize: 18, fixed: true }
+    );
+	
+    let cb_no_axis = new CheckBox(controlboard, 2, 0.5, 'None', false,
+        function() {
+            cb_vertical_axis.set(false);
+            cb_horizontal_axis.set(false);
+            cb_no_axis.set(true);
+            horizontal_axis.setAttribute({ visible: false });
+            horiz_axis_loc.setAttribute({ visible: false });
+            vertical_axis.setAttribute({ visible: false });
+            vert_axis_loc.setAttribute({ visible: false });
+            set_method();
+            update();
+        },
+        { fontSize: 18, fixed: true });
+
+    let hidden_horiz_line = board.create('line', [[-10, -9], [20, -9]], { visible: false });
+    let vert_axis_loc = board.create('glider', [0, 0, hidden_horiz_line], 
+        { name: 'v', withLabel: false, showInfoBox: false, visible: false });
+    let vertical_axis = board.create('line', [vert_axis_loc, [
+        function() { 
+            return vert_axis_loc.X() 
+        }, 0]], 
+        { dash: 3, color: 'black', visible: false }
+    );
+
+    let hidden_vert_line = board.create('line', [[-9, 9], [-9, -9]], { visible: false });
+    let horiz_axis_loc = board.create('glider', [0, 0, hidden_vert_line], 
+        { name: 'h', withlabel: false, showInfoBox: false });
+    let horizontal_axis = board.create('line', [horiz_axis_loc, [0, 
+        function() { 
+            return horiz_axis_loc.Y() 
+        }]], 
+        { dash: 3, color: 'black'}
+    );
+
+    let method_label = controlboard.create('text', [1, 7, 'Disk Method'], { fontSize: 18, fixed: true });
+    let disk_method = true;
+    set_method();
+    update();
+
+    function set_method() {
+        //alert('vertical rectangle == ' + vertical_rectangle.Value() + '  horizontal rectangle == ' + horizontal_rectangle.Value() + '\n' + 'vertical axis == ' + cb_vertical_axis.Value() + '  horizontal axis == ' + cb_horizontal_axis.Value());
+        if((vertical_rectangle.isChecked() && cb_horizontal_axis.isChecked()) || 
+                (horizontal_rectangle.isChecked() && cb_vertical_axis.isChecked())) {
+            disk_method = true;
+            method_label.setText('Disk Method');
+            //alert('We\'ll call it the Disk Method');
+        }
+        if((vertical_rectangle.isChecked() && cb_vertical_axis.isChecked()) || 
+                (horizontal_rectangle.isChecked() && cb_horizontal_axis.isChecked())) {
+            disk_method = false;
+            method_label.setText('Shell Method');
+            //alert('We\'ll call it the Shell Method');
+        } 
+        if(cb_no_axis.isChecked()) {
+            method_label.setText('');
+        }
+    };
+	
+    let width = 0.25;
+
+    // horizontal rectangle: P1 = ( g1(y - w/2), y - w/2  )
+    // vertical rectangle: P1 = ( x - w/2, f1(x - w/2) )
+
+    let P1 = board.create('point', [
+        function() {
+            if(horizontal_rectangle.isChecked()) {
+                left_f = document.getElementById('left_bound').value;
+                if(left_f != '') {
+                    return evaluate(left_f, slider.Value() - (width / 2), 'y');
+                } else return 0;
+            } else if(vertical_rectangle.isChecked()) {
+                return slider.Value() - (width / 2);
+            } else return 0;
+        }, 
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                return slider.Value() - (width / 2); 
+            } else if (vertical_rectangle.isChecked()) {
+                lower_f = document.getElementById('lower_bound').value;
+                if(lower_f != '') {
+                    return evaluate(lower_f, slider.Value() + (width / 2), 'x');
+                } else return 0;
+            } else return 0;
+        }], 
+        { visible: false, name: 'P1' }
+    );
+			
+    // horizontal rectangle: P2 = (g2(y - w/2), g1(y - w/2) )
+    // vertical rectangle: P2 = (x - w/2, f2(x - w/2))		
+	
+    let P2 = board.create('point', [
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                right_f = document.getElementById('right_bound').value;
+                if(right_f != '') {
+                    return evaluate(right_f, slider.Value() - (width / 2), 'y'); 
+                } else return 0;
+            } else if(vertical_rectangle.isChecked()) {
+                return slider.Value() - (width / 2);
+            } else return 0;
+        }, 
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                return slider.Value() - (width / 2); 
+            } else if(vertical_rectangle.isChecked()) {
+                upper_f = document.getElementById('upper_bound').value;
+                if(upper_f != '') {
+                    return evaluate(upper_f, slider.Value() + (width / 2), 'x');
+                } else return 0;
+            } else return 0;
+        }], 
+        { visible: false, name: 'P2' }
+    );
+			
+    // horizontal rectangle: P3 = (g2(y - w/2), g1(y - w/2) + w )
+    // vertical rectangle: P3 = (x + width, f2(x + width))
+			
+    let P3 = board.create('point', [
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                right_f = document.getElementById('right_bound').value;
+                if(right_f != '') {
+                    return evaluate(right_f, slider.Value() - (width / 2), 'y'); 
+                } else return 0;
+            } else if(vertical_rectangle.isChecked()) {
+                return slider.Value() + width; 
+            } else return 0;
+        }, 
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                return P1.Y() + width; 
+            } else if(vertical_rectangle.isChecked()) {
+                upper_f = document.getElementById('upper_bound').value;
+                if(upper_f != '') {
+                    return evaluate(upper_f, slider.Value() + (width / 2), 'x');
+                } else return 0;
+            } else return 0;
+        }], 
+        { visible: false, name: 'P3' }
+    );
+			
+    // horizontal rectangle: P4 = ( g1(y - w/2), g1(y - w/2) + w )
+    // vertical rectangle: P4 = (x + width, f1(x + width))			
+			
+    var P4 = board.create('point', [
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                return P1.X(); 
+            } else if(vertical_rectangle.isChecked()) {
+                return slider.Value() + width;
+            } else return 0;
+        }, 
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                return P1.Y() + width; 
+            } else if(vertical_rectangle.isChecked()) {
+                lower_f = document.getElementById('lower_bound').value;
+                if(lower_f != '') {
+                    return evaluate(lower_f, slider.Value() + (width / 2), 'x');
+                } else return 0;
+            } else return 0;
+        }],
+        { visible: false, name: 'P4' }
+    );
+	
+    let rectangle = board.create('polygon', [P1, P2, P3, P4]);
+
+    /**
+     * Evaluates a function of the form: y=f(x) or x = g(y), but the x= and y=
+     * are ignored and the variable to substitue value into must be specified.
+     * @param func - the fuction to evaluate
+     * @param value - the value to evaluate the funciton at
+     * @param variable - the variable to change within the function
+     * @returns f(value) 
+     */
+    function evaluate(func, value, variable) {
+        func = func.slice(func.indexOf('='));
+        return evalstr(func, { variable: value });
+    }
+
+    function update() {
+
+        let bounds = JSXGetBounds(board);
+
+        let upper_f = document.getElementById('upper_bound').value;
+        boundaries[0] = plot(boundaries[0], upper_f, bounds.xmin, bounds.xmax);//plot_relation(boundaries[0], upper_f);
+        
+        var lower_f = document.getElementById('lower_bound').value;
+        boundaries[1] = plot(boundaries[1], lower_f, bounds.xmin, bounds.xmax);//(boundaries[1], lower_f);
+        
+        var right_f = document.getElementById('right_bound').value;
+        boundaries[2] = plot(boundaries[2], right_f, bounds.ymin, bounds.ymax);//plot_relation(boundaries[2], right_f);
+        
+        var left_f = document.getElementById('left_bound').value;
+        boundaries[3] = plot(boundaries[3], left_f, bounds.ymin, bounds.ymax);//plot_relation(boundaries[3], left_f);	
+            
+        slider_min = parseFloat(document.getElementById('slider_min').value);
+        slider_max = parseFloat(document.getElementById('slider_max').value);
+        slider_avg = (slider_min + slider_max) / 2;
+        slider.setMin(slider_min);	
+        slider.setMax(slider_max);
+        slider.setValue(slider_avg);
+        slider.update();
+        
+        board.update();	
+            
+    }
+
+    // function plot_relation(curve, ogtxt) {
+    //     if(ogtxt.indexOf('=') != -1) {
+    //         if(ogtxt.charAt(0) == 'y') {
+    //             // This is a function of the form y = f(x)
+    //             strf = ogtxt.slice(2);
+    //             strf = changeVariable(strf, 'x', 't');
+    //             relation = board.jc.snippet(strf, true, 't', true);
+    //             curve.X = function(t) { return t; };
+    //             curve.Y = relation;
+    //             curve.setAttribute( { visible: true } );
+    //             curve.updateCurve();
+    //         }
+    //         if(ogtxt.charAt(0) == 'x') {
+    //             // This is a function of the form x = g(y)
+    //             strf = ogtxt.slice(2);
+    //             strf = changeVariable(strf, 'y', 't');
+    //             relation = board.jc.snippet(strf, true, 't', true);
+    //             curve.X = relation;
+    //             curve.Y = function(t) { return t; };
+    //             curve.setAttribute( { visible: true } );
+    //             curve.updateCurve();
+    //         }
+    //     } else if(ogtxt == '') {
+    //         curve.X == function(t) { return 0; };
+    //         curve.Y == function(t) { return 0; };
+    //         curve.setAttribute( { visible: false } );
+    //         curve.updateCurve();
+    //     }
+    //     return curve;
+    // }
+
+    function changeVariable(s, a, b) {
+
+        s = replaceAll(s, a, b);
+        s = replaceAll(s, 'etp', 'exp');
+
+        return s;
+    }
+
+    function replaceAll(s, a, b) {
+
+        while(s.indexOf(a) != -1) {
+            s = s.replace(a, b);
+        }
+        return s;
+
+    }
+
+</script>
+</body>
+</html>

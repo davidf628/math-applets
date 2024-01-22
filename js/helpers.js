@@ -27,12 +27,12 @@ export function fullscreen() {
         }
     }
 }
-
-export function getXPct(pct) {
+ 
+export function getXPct(board, pct) {
     return board.getBoundingBox()[0] + pct * (board.getBoundingBox()[2] - board.getBoundingBox()[0]);
 }
 
-export function getYPct(pct) {
+export function getYPct(board, pct) {
     return board.getBoundingBox()[1] - pct * (board.getBoundingBox()[1] - board.getBoundingBox()[3]);
 }
 
@@ -60,10 +60,10 @@ export function setupZoomPanel(board, args) {
     let yend = args.yend ? args.yend : ystart + 0.15;
 
 
-    let p1 = board.create('point', [function() { return getXPct(xstart);}, function() { return getYPct(ystart)}], { visible: false });
-    let p2 = board.create('point', [function() { return getXPct(xend);}, function() { return getYPct(ystart)}], { visible: false });
-    let p3 = board.create('point', [function() { return getXPct(xend);}, function() { return getYPct(yend)}], { visible: false });
-    let p4 = board.create('point', [function() { return getXPct(xstart);}, function() { return getYPct(yend)}], { visible: false });
+    let p1 = board.create('point', [function() { return getXPct(board, xstart);}, function() { return getYPct(board, ystart)}], { visible: false });
+    let p2 = board.create('point', [function() { return getXPct(board, xend);}, function() { return getYPct(board, ystart)}], { visible: false });
+    let p3 = board.create('point', [function() { return getXPct(board, xend);}, function() { return getYPct(board, yend)}], { visible: false });
+    let p4 = board.create('point', [function() { return getXPct(board, xstart);}, function() { return getYPct(board, yend)}], { visible: false });
     
     zoomPanel = board.create('polygon', [p1, p2, p3, p4],
     { 
@@ -77,14 +77,14 @@ export function setupZoomPanel(board, args) {
     });
     
     slider_horiz_zoom = board.create('slider', [
-        [ function() { return getXPct(xstart + 0.03); }, function() { return getYPct(ystart + 0.05); }], 
-        [ function() { return getXPct(xend - 0.07); }, function() { return getYPct(ystart + 0.05); }], 
+        [ function() { return getXPct(board, xstart + 0.03); }, function() { return getYPct(board, ystart + 0.05); }], 
+        [ function() { return getXPct(board, xend - 0.07); }, function() { return getYPct(board, ystart + 0.05); }], 
         [xmin, xinit, xmax]]);
     slider_horiz_zoom.on('drag', changeScale);
     
     slider_vert_zoom = board.create('slider', [
-        [ function() { return getXPct(xstart + 0.03); }, function() { return getYPct(ystart + 0.1); }], 
-        [ function() { return getXPct(xend - 0.07); }, function() { return getYPct(ystart + 0.1); }], 
+        [ function() { return getXPct(board, xstart + 0.03); }, function() { return getYPct(board, ystart + 0.1); }], 
+        [ function() { return getXPct(board, xend - 0.07); }, function() { return getYPct(board, ystart + 0.1); }], 
         [ymin, yinit, ymax]]);
     slider_vert_zoom.on('drag', changeScale);
 
