@@ -2,9 +2,14 @@
 /**
  * This library uses a type of object I created called a PlotObject, which is
  * an array of PlotPieces. A plot piece can consist of the following:
- *  + a curve, with or without a restricted bound
- *  + a point, which can be an open or closed circle
- *  + 
+ *  + curve = {
+ *      type: 'curve', relation: {string}, interval: {string},
+ *      lowerendpoint: JSXGraph.Point, upperendpoint: JSXGraph.Point
+ *    }, 
+ *  + point = {
+ *      type: 'point', coords: {string}, solid: {boolean}
+ *    }
+ * 
  * 
  * All of these applets use a standardized method of creating and evaluating
  * functions from strings. Here is an overview of the notation used:
@@ -23,10 +28,10 @@
  * 
  * Parametric Equations: (independent count: 1, dependent count: 2)
  * --------------------
- *   - <t, t^2-1>: interpreted as a pair of parametric equations (vector-
- *       valued functions) with parameter t. The domain of t is assumed (-oo, oo)
  *   - <2t, -8t-1> (-4, 3]: parametric equations where the parameter t
  *       is restricted from t = -4 to t = 3
+ *   Notes: an interval for t must be supplied and neither endpoint
+ *    can be infinity
  * 
  * Implicit Equations: (independent count: 2, dependent count: 1)
  * ------------------
@@ -74,7 +79,7 @@ import {
 import {
     getEndpoints,
     spliceInterval,
-    isBetween,
+    isBetween, lowerBoundClosed, upperBoundClosed
 } from './interval.js';
 
 import {
@@ -93,41 +98,41 @@ import { evalstr, replace_logarithms } from './eval.js';
 // Useful constants
 let dashsetting = 3;
 
-class RelationGraph {
-
-    /**
-     * pieces - a list of the different graph pieces
-     */
-
-    constructor(board) {
-
-        this.pieces = [];
-        this.board = board;
+/**
+ * Goes through a PlotPieces array and finds a piece that is a curve, which
+ * can then be updated and modified
+ * @param {PlotPieces[]} plot_pieces 
+ */
+export function getPlot(plot_pieces) {
+    for(piece of plot_pieces) {
+        if(piece.type == 'curve') {
+            return piece.curve
+        }
     }
-
-    addGraph(graph) {
-        
-    }
-
 }
 
 /**
  * Plots a function, it can restrict to a specified interval but if open/closed
  * endpoints are needed they must be created elsewhere.
- * @param board - JSXGraph board to draw the curve on
- * @param relation - the function to draw, this can include a restricted domain
- * @param args - special arguments to affect the way the function is drawn
- * @option color: the color of the curve
- * @option interval: another way to specify a restricted interval
- * @option density: the distance for the routine to sample points
- * @option width: the width of the curve
- * @option variable: the variable used within the function
- * @option dashed (boolean): whether or not to draw a dashed curve
- * @option curve: a JSX curve object, this is used when the curve
- *   needs an ability to be updated
- * @returns a reference to the created JSX curve
+ * @param board {JSXGraph.board} - JSXGraph board to draw the curve on
+ * @param relation {string} - the function to draw, this can include a 
+ *  restricted domain
+ * @param args {object} - special arguments to affect the way the function 
+ *  is drawn
+ * @option {string or hex} color: the color of the curve
+ * @option {string} interval: another way to specify a restricted interval
+ * @option {float} width: the width of the curve
+ * @option {string} variable: the variable used within the function
+ * @option {boolean} dashed: whether or not to draw a dashed curve
+ * @option {JSXGraph.Curve} curve: a JSX curve object, this is used when the 
+ *  curve needs an ability to be updated
+ * @returns {PlotPieces[]} a reference to the created JSX curve
  */
 export function plot_function2(board, relation, args) {
+
+    let plot_piece = {
+        type: 'curve',
+    };
 
 	if(args === undefined) {
 		args = {};
@@ -135,13 +140,14 @@ export function plot_function2(board, relation, args) {
 
 	let color = args.color ? args.color : 'blue';
 	let interval = args.interval ? args.interval : '';
-	let density = args.density ? args.density : 0.01;
 	let width = args.width ? args.width : 2;
 	let variable = args.variable ? args.variable : 'x';
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
     let curve = args.curve ? args.curve : board.create('curve', [0,0], 0, 0, { visible: false });
 
     [relation, interval] = spliceInterval(relation);
+    plot_piece.relation = relation;
+    plot_piece.interval = interval;
 
     let bounds = JSXGetBounds(board);
 
@@ -152,7 +158,34 @@ export function plot_function2(board, relation, args) {
 	relation = replace_logarithms(relation);
 
     let expr = math.compile(relation);
+    let parameter = {};
+    parameter[variable] = 0;
+
     let [ start_x, end_x ] = getEndpoints(interval);
+
+    // Plot an endpoint if the lower bound is restricted
+    if (isBetween(start_x, bounds.xmin, bounds.xmax)) {
+        parameter[variable] = start_x;
+        let x_coord = start_x;
+        let y_coord = expr.evaluate(parameter);
+        let solid = lowerBoundClosed(interval);
+        plot_piece.lowerendpoint = plot_endpoint(board, [x_coord, y_coord], 
+            solid, color, plot_piece.lowerendpoint);
+    } else if (plot_piece.lowerendpoint) {
+        plot_piece.lowerendpoint.setAttribute({ visible: false });
+    }
+
+    // Plot an endpoint if the upper bound is restricted
+    if (isBetween(end_x, bounds.xmin, bounds.xmax)) {
+        parameter[variable] = end_x;
+        let x_coord = end_x;
+        let y_coord = expr.evaluate(parameter);
+        let solid = upperBoundClosed(interval);
+        plot_piece.upperendpoint = plot_endpoint(board, [x_coord, y_coord], 
+            solid, color, plot_piece.upperendpoint);
+    } else if (plot_piece.upperendpoint) {
+        plot_piece.upperendpoint.setAttribute({ visible: false });
+    }
 
     start_x = start_x == NEGATIVE_INFINITY ? bounds.xmin : start_x;
     end_x = end_x == POSITIVE_INFINITY ? bounds.xmax : end_x;
@@ -160,11 +193,14 @@ export function plot_function2(board, relation, args) {
     curve.X = function(x) { return x; };
     curve.Y = function(x) { 
         if (isBetween(x, start_x, end_x)) {
-            return expr.evaluate({x :x}); 
+            parameter[variable] = x;
+            return expr.evaluate(parameter); 
         } else {
             return NaN;
         }
     };
+
+    plot_piece.curve = curve;
 
     /*
 
@@ -196,9 +232,36 @@ export function plot_function2(board, relation, args) {
 
     curve.updateCurve();
 
-    return curve ;
+    return [ plot_piece ] ;
 	
 }
+
+/**
+ * Draws either an open or closed circle at the endpoint of a curve. 
+ * @param {JSXGraph.Board} board - the JSXGraph drawing board to plot
+ *   the point on
+ * @param {float[]} coords - the coordinates to plot the endpoint in the 
+ *   form: (a, b)
+ * @param {boolean} solid - whether to plot with an open circle or a closed
+ *   circle
+ * @param {string or hex} color - the color to draw the point
+ * @param {JSXGraph.Point} point - a reference to a JSXGraph point, if this is
+ *   null a new point will be created, otherwise it will update the coordinates
+ *   of the point it is displaying
+ * @returns {JSXGraph.Point} a reference to the point drawn
+ */
+export function plot_endpoint(board, coords, solid, color, point) {
+    if (!point) {
+        point = board.create('point', [0,0], { visible: false });
+    }
+    point.moveTo(coords);
+    point.setAttribute({
+        strokeColor: color,
+        fillColor: solid ? color : 'white',
+        visible: true
+    });
+}
+
 /**
  * Plots a function, it can restrict to a specified interval but if open/closed
  * endpoints are needed they must be created elsewhere.

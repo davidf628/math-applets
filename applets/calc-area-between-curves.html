@@ -40,7 +40,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
     import { evalstr } from '../js/eval.js';
     import { setupZoomPanel, toggle_zoomPanel } from '../js/helpers.js';
     import { CheckBox } from '../js/checkbox.js';
-    import { plot, plot_function2 } from '../js/plot.js';
+    import { plot, plot_function2, getPlot } from '../js/plot.js';
     import { JSXGetBounds } from '../js/misc.js';
 
     let board = JXG.JSXGraph.initBoard('jxgbox', {
@@ -333,7 +333,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
 
         let upper_f = document.getElementById('upper_bound').value;
         //boundaries[0] = plot(boundaries[0], upper_f, bounds.xmin, bounds.xmax);//plot_relation(boundaries[0], upper_f);
-        boundaries[0] = plot_function2(board, upper_f, { curve: boundaries[0] });
+        boundaries[0] = getPlot(plot_function2(board, upper_f, { curve: boundaries[0] }));
 
         var lower_f = document.getElementById('lower_bound').value;
         plot_function2(board, lower_f);
