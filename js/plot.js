@@ -1,5 +1,11 @@
 
 /**
+ * This library uses a type of object I created called a PlotObject, which is
+ * an array of PlotPieces. A plot piece can consist of the following:
+ *  + a curve, with or without a restricted bound
+ *  + a point, which can be an open or closed circle
+ *  + 
+ * 
  * All of these applets use a standardized method of creating and evaluating
  * functions from strings. Here is an overview of the notation used:
  * 
@@ -65,6 +71,18 @@ import {
     removeFunctionName,
 } from './functions.js';
 
+import {
+    getEndpoints,
+    spliceInterval,
+    isBetween,
+} from './interval.js';
+
+import {
+    JSXGetBounds
+} from './misc.js';
+
+import { POSITIVE_INFINITY, NEGATIVE_INFINITY } from './dmath.js';
+
 import { evalstr, replace_logarithms } from './eval.js';
 
 // Dependencies:
@@ -75,6 +93,112 @@ import { evalstr, replace_logarithms } from './eval.js';
 // Useful constants
 let dashsetting = 3;
 
+class RelationGraph {
+
+    /**
+     * pieces - a list of the different graph pieces
+     */
+
+    constructor(board) {
+
+        this.pieces = [];
+        this.board = board;
+    }
+
+    addGraph(graph) {
+        
+    }
+
+}
+
+/**
+ * Plots a function, it can restrict to a specified interval but if open/closed
+ * endpoints are needed they must be created elsewhere.
+ * @param board - JSXGraph board to draw the curve on
+ * @param relation - the function to draw, this can include a restricted domain
+ * @param args - special arguments to affect the way the function is drawn
+ * @option color: the color of the curve
+ * @option interval: another way to specify a restricted interval
+ * @option density: the distance for the routine to sample points
+ * @option width: the width of the curve
+ * @option variable: the variable used within the function
+ * @option dashed (boolean): whether or not to draw a dashed curve
+ * @option curve: a JSX curve object, this is used when the curve
+ *   needs an ability to be updated
+ * @returns a reference to the created JSX curve
+ */
+export function plot_function2(board, relation, args) {
+
+	if(args === undefined) {
+		args = {};
+	}
+
+	let color = args.color ? args.color : 'blue';
+	let interval = args.interval ? args.interval : '';
+	let density = args.density ? args.density : 0.01;
+	let width = args.width ? args.width : 2;
+	let variable = args.variable ? args.variable : 'x';
+	let dashed = (args.dashed !== undefined) ? args.dashed : false;
+    let curve = args.curve ? args.curve : board.create('curve', [0,0], 0, 0, { visible: false });
+
+    [relation, interval] = spliceInterval(relation);
+
+    let bounds = JSXGetBounds(board);
+
+	curve.setAttribute({ strokeWidth: width, strokeColor: color });
+    curve.setAttribute({ dash: dashed ? dashsetting : 0 });
+
+	// math.js does not support ln notation
+	relation = replace_logarithms(relation);
+
+    let expr = math.compile(relation);
+    let [ start_x, end_x ] = getEndpoints(interval);
+
+    start_x = start_x == NEGATIVE_INFINITY ? bounds.xmin : start_x;
+    end_x = end_x == POSITIVE_INFINITY ? bounds.xmax : end_x;
+    
+    curve.X = function(x) { return x; };
+    curve.Y = function(x) { 
+        if (isBetween(x, start_x, end_x)) {
+            return expr.evaluate({x :x}); 
+        } else {
+            return NaN;
+        }
+    };
+
+    /*
+
+     - The following code draws the function using mathjs as the main
+       computation engine. It is very efficient, but JSX seems to have
+       a better underlying algorithm for drawing functions
+
+    // This is an explicit function of the form: f(x)
+    curve.dataX = math.range(start_x, end_x + density, density).toArray();
+    curve.dataY = curve.dataX.map(
+        function(x) {
+            var parameter = {};
+            parameter[variable] = x;
+            return expr.evaluate(parameter);
+        }
+    );
+
+    // If the curve shoots off to infinity, this will prevent the curve from
+    // drawing an "asymptote" at that value
+
+    for(var i = 0; i < curve.dataY.length; i++) {
+        if(curve.dataY[i] > (2 * bounds.ymax)) {
+            curve.dataY[i] = NaN;
+        } else if(curve.dataY[i] < (2 * bounds.ymin)) {
+            curve.dataY[i] = NaN;
+        }
+    }
+    */
+
+    curve.updateCurve();
+
+    return curve ;
+	
+}
 /**
  * Plots a function, it can restrict to a specified interval but if open/closed
  * endpoints are needed they must be created elsewhere.

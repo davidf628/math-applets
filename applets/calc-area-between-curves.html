@@ -40,7 +40,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
     import { evalstr } from '../js/eval.js';
     import { setupZoomPanel, toggle_zoomPanel } from '../js/helpers.js';
     import { CheckBox } from '../js/checkbox.js';
-    import { plot } from '../js/plot.js';
+    import { plot, plot_function2 } from '../js/plot.js';
     import { JSXGetBounds } from '../js/misc.js';
 
     let board = JXG.JSXGraph.initBoard('jxgbox', {
@@ -79,6 +79,11 @@ Slider Min = <input type="text" id="slider_min" value="0">
     boundaries[1] = board.create('curve', [0, 0], 0, 0, { visible: false });
     boundaries[2] = board.create('curve', [0, 0], 0, 0, { visible: false });
     boundaries[3] = board.create('curve', [0, 0], 0, 0, { visible: false });
+
+    let f = math.compile('(x-2)/((x-3)(x-4))');
+
+    //let myFunc = board.create('functiongraph', [(x) => f.evaluate({x: x})]);
+    window.myCurve = board.create('curve', [(x) => x, (x) => f.evaluate({x: x})]);
 
     let slider_min = parseInt(document.getElementById('slider_min').value);
     let slider_max = parseInt(document.getElementById('slider_max').value);
@@ -327,16 +332,18 @@ Slider Min = <input type="text" id="slider_min" value="0">
         let bounds = JSXGetBounds(board);
 
         let upper_f = document.getElementById('upper_bound').value;
-        boundaries[0] = plot(boundaries[0], upper_f, bounds.xmin, bounds.xmax);//plot_relation(boundaries[0], upper_f);
-        
+        //boundaries[0] = plot(boundaries[0], upper_f, bounds.xmin, bounds.xmax);//plot_relation(boundaries[0], upper_f);
+        boundaries[0] = plot_function2(board, upper_f, { curve: boundaries[0] });
+
         var lower_f = document.getElementById('lower_bound').value;
-        boundaries[1] = plot(boundaries[1], lower_f, bounds.xmin, bounds.xmax);//(boundaries[1], lower_f);
+        plot_function2(board, lower_f);
+        //boundaries[1] = plot(boundaries[1], lower_f, bounds.xmin, bounds.xmax);//(boundaries[1], lower_f);
         
         var right_f = document.getElementById('right_bound').value;
-        boundaries[2] = plot(boundaries[2], right_f, bounds.ymin, bounds.ymax);//plot_relation(boundaries[2], right_f);
+        //boundaries[2] = plot(boundaries[2], right_f, bounds.ymin, bounds.ymax);//plot_relation(boundaries[2], right_f);
         
         var left_f = document.getElementById('left_bound').value;
-        boundaries[3] = plot(boundaries[3], left_f, bounds.ymin, bounds.ymax);//plot_relation(boundaries[3], left_f);	
+        //boundaries[3] = plot(boundaries[3], left_f, bounds.ymin, bounds.ymax);//plot_relation(boundaries[3], left_f);	
             
         slider_min = parseFloat(document.getElementById('slider_min').value);
         slider_max = parseFloat(document.getElementById('slider_max').value);

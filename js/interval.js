@@ -1,4 +1,6 @@
 import { evalstr } from './eval.js';
+import { removeSpaces } from './misc.js';
+import { NEGATIVE_INFINITY, POSITIVE_INFINITY } from './dmath.js';
 
 // Pattern for a restricted interval:
 
@@ -57,6 +59,12 @@ export function removeInterval(relation) {
 	return relation;
 }
 
+export function spliceInterval(relation) {
+    let interval = getInterval(relation);
+    let func = removeInterval(relation);
+    return [func, interval];
+}
+
 ///////////////////////////////////////////////////////////
 //
 // Gets the lower and bound of a interval expressed as:
@@ -65,25 +73,39 @@ export function removeInterval(relation) {
 ////////////////////////////////////////////////////////////
 
 export function getLowerEndpoint(interval) {
-	interval = removeSpaces(interval);
-	l = interval.split(',');
-	l[0] = l[0].substring(1, l[0].length);
-	if(l[0].includes('inf') || l[0].includes('-oo')) {
-		return NEGATIVE_INFINITY;
-	} else {
-		return evalstr(l[0]);
-	}
+    if (interval !== '') {
+        interval = removeSpaces(interval);
+        let l = interval.split(',');
+        l[0] = l[0].substring(1, l[0].length);
+        if(l[0].includes('inf') || l[0].includes('-oo')) {
+            return NEGATIVE_INFINITY;
+        } else {
+            return evalstr(l[0]);
+        }
+    } else {
+        return NEGATIVE_INFINITY;
+    }
 }
 
 export function getUpperEndpoint(interval) {
-	interval = removeSpaces(interval);
-	l = interval.split(',');
-	l[1] = l[1].substring(0, l[1].length - 1);
-	if(l[1].includes('inf') || l[1].includes('oo')) {
-		return POSITIVE_INFINITY;
-	} else {
-		return evalstr(l[1]);
-	}
+	if (interval !== '') {
+        interval = removeSpaces(interval);
+        let l = interval.split(',');
+        l[1] = l[1].substring(0, l[1].length - 1);
+        if(l[1].includes('inf') || l[1].includes('oo')) {
+            return POSITIVE_INFINITY;
+        } else {
+            return evalstr(l[1]);
+        }
+    } else {
+        return POSITIVE_INFINITY;
+    }
+}
+
+export function getEndpoints(interval) {
+    let lower_val = getLowerEndpoint(interval);
+    let upper_val = getUpperEndpoint(interval);
+    return [lower_val, upper_val];
 }
 
 export function getHoleValue(interval) {

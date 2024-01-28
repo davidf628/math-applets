@@ -25,6 +25,8 @@ export const PREC    = 1E-16;
 
 export const MAXDOUBLE = Number.MAX_VALUE;
 export const MINDOUBLE = Number.MIN_VALUE;
+export const POSITIVE_INFINITY = MAXDOUBLE;
+export const NEGATIVE_INFINITY = MINDOUBLE;
 export const MAXINT    = Number.MAX_SAFE_INTEGER;
 export const MININT    = Number.MIN_SAFE_INTEGER;
 export const MAXLOG    = Math.log(MAXDOUBLE);
