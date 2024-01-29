@@ -6,11 +6,19 @@ import { NEGATIVE_INFINITY, POSITIVE_INFINITY } from './dmath.js';
 
 const regex_math = '|[\\w\\+\\-\\*\\/^()]*';
 
-const regex_interval = '(\\(|\\[)\\s*' +                       // ( or [
-			           '(-?\\d*\\.?\\d*|-inf(inity)?|-oo)' +   // -2, 1.8, -inf, -oo
-			      	   ',\\s*' +                               // ,
-				       '(-?\\d*\\.?\\d*|\\+?inf(inity)?|\\+?oo)\\s*' + // -2, 1.8, +inf, +oo
-				       '(\\)|\\])';                            // ] or )
+// const regex_interval = '(\\(|\\[)\\s*' +                       // ( or [
+// 			           '(-?\\d*\\.?\\d*|-inf(inity)?|-oo)' +   // -2, 1.8, -inf, -oo
+// 			      	   ',\\s*' +                               // ,
+// 				       '(-?\\d*\\.?\\d*|\\+?inf(inity)?|\\+?oo)\\s*' + // -2, 1.8, +inf, +oo
+// 				       '(\\)|\\])';                            // ] or )
+
+const regex_interval = 
+    '(\\(|\\[)\\s*' +                         // ( or [
+    '[\\w\\+\\-\\*\\/\\^\\(\\)\\.]*\\s*' +       // -2, 1.8, -inf, -oo, pi/2, etc.
+    ',\\s*' +                                  // ,
+    '[\\w\\+\\-\\*\\/\\^\\(\\)\\.]*\\s*' +      // "," then -2, 1.8, +inf, +oo, pi/4, etc. 
+    '(\\)|\\])';                              // ] or )
+                       
 
 // Pattern for a hole in the graph:
 

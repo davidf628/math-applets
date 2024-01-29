@@ -102,9 +102,18 @@ let dashsetting = 3;
  * Goes through a PlotPieces array and finds a piece that is a curve, which
  * can then be updated and modified
  * @param {PlotPieces[]} plot_pieces 
+ * @returns {PlotPiece} the plot piece found
  */
-export function getPlot(plot_pieces) {
-    for(piece of plot_pieces) {
+export function getPlotPiece(plot_pieces) {
+    for(let piece of plot_pieces) {
+        if(piece.type == 'curve') {
+            return piece
+        }
+    }
+}
+
+export function getCurve(plot_piece) {
+    for(let piece of plot_pieces) {
         if(piece.type == 'curve') {
             return piece.curve
         }
@@ -112,8 +121,8 @@ export function getPlot(plot_pieces) {
 }
 
 /**
- * Plots a function, it can restrict to a specified interval but if open/closed
- * endpoints are needed they must be created elsewhere.
+ * Plots a function, it can restrict to a specified interval and will draw open
+ * and closed endpoints if they are needed.
  * @param board {JSXGraph.board} - JSXGraph board to draw the curve on
  * @param relation {string} - the function to draw, this can include a 
  *  restricted domain
@@ -124,15 +133,11 @@ export function getPlot(plot_pieces) {
  * @option {float} width: the width of the curve
  * @option {string} variable: the variable used within the function
  * @option {boolean} dashed: whether or not to draw a dashed curve
- * @option {JSXGraph.Curve} curve: a JSX curve object, this is used when the 
- *  curve needs an ability to be updated
- * @returns {PlotPieces[]} a reference to the created JSX curve
+ * @option {PlotPiece} piece: a wrapper for a JSX curve object, this contains
+ *  the curve, and the possible endpoints of the curve
+ * @returns {PlotPiece} a Plot Piece which contains the curve
  */
 export function plot_function2(board, relation, args) {
-
-    let plot_piece = {
-        type: 'curve',
-    };
 
 	if(args === undefined) {
 		args = {};
@@ -143,7 +148,10 @@ export function plot_function2(board, relation, args) {
 	let width = args.width ? args.width : 2;
 	let variable = args.variable ? args.variable : 'x';
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
-    let curve = args.curve ? args.curve : board.create('curve', [0,0], 0, 0, { visible: false });
+    let plot_piece = args.piece ? args.piece : { type: 'curve' };
+    let curve = args.piece ? 
+        args.piece.curve : 
+        board.create('curve', [0,0], 0, 0, { visible: false });
 
     [relation, interval] = spliceInterval(relation);
     plot_piece.relation = relation;
@@ -151,7 +159,7 @@ export function plot_function2(board, relation, args) {
 
     let bounds = JSXGetBounds(board);
 
-	curve.setAttribute({ strokeWidth: width, strokeColor: color });
+	curve.setAttribute({ strokeWidth: width, strokeColor: color, highlight: false });
     curve.setAttribute({ dash: dashed ? dashsetting : 0 });
 
 	// math.js does not support ln notation
@@ -232,7 +240,7 @@ export function plot_function2(board, relation, args) {
 
     curve.updateCurve();
 
-    return [ plot_piece ] ;
+    return plot_piece;
 	
 }
 
@@ -252,14 +260,20 @@ export function plot_function2(board, relation, args) {
  */
 export function plot_endpoint(board, coords, solid, color, point) {
     if (!point) {
-        point = board.create('point', [0,0], { visible: false });
+        point = board.create('point', [0,0], { 
+            withLabel: false,
+            fixed: true,
+            visible: false,
+            highlight: false,
+        });
     }
     point.moveTo(coords);
     point.setAttribute({
         strokeColor: color,
         fillColor: solid ? color : 'white',
-        visible: true
+        visible: true,
     });
+    return point;
 }
 
 /**
