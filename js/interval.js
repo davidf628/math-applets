@@ -4,14 +4,6 @@ import { NEGATIVE_INFINITY, POSITIVE_INFINITY } from './dmath.js';
 
 // Pattern for a restricted interval:
 
-const regex_math = '|[\\w\\+\\-\\*\\/^()]*';
-
-// const regex_interval = '(\\(|\\[)\\s*' +                       // ( or [
-// 			           '(-?\\d*\\.?\\d*|-inf(inity)?|-oo)' +   // -2, 1.8, -inf, -oo
-// 			      	   ',\\s*' +                               // ,
-// 				       '(-?\\d*\\.?\\d*|\\+?inf(inity)?|\\+?oo)\\s*' + // -2, 1.8, +inf, +oo
-// 				       '(\\)|\\])';                            // ] or )
-
 const regex_interval = 
     '(\\(|\\[)\\s*' +                         // ( or [
     '[\\w\\+\\-\\*\\/\\^\\(\\)\\.]*\\s*' +       // -2, 1.8, -inf, -oo, pi/2, etc.
@@ -51,8 +43,7 @@ export function getInterval(relation) {
 
 export function removeInterval(relation) {
 
-	var interval = '';
-	var intervalstart = 0;
+	let intervalstart = 0;
 
 	intervalstart = relation.search(regex_interval);
 	if (intervalstart != -1) {
@@ -127,40 +118,59 @@ export function getHoleValue(interval) {
 //
 /////////////////////////////////////////////////////////////////
 
+export function isInterval(interval) {
+    return interval.search(regex_interval) != -1;
+}
+
 export function lowerBoundOpen(interval) {
-	return interval.includes('(');
+	return isInterval(interval) && interval.includes('(');
 }
 
 export function upperBoundOpen(interval) {
-	return interval.includes(')');
+	return isInterval(interval) && interval.includes(')');
 }
 
 export function lowerBoundClosed(interval) {
-	return interval.includes('[');
+	return isInterval(interval) && interval.includes('[');
 }
 
 export function upperBoundClosed(interval) {
-	return interval.includes(']');
+	return isInterval(interval) && interval.includes(']');
 }
 
+export function isClosedInterval(interval) {
+    return lowerBoundClosed(interval) && upperBoundClosed(interval);
+}
 
-/******************************************************************************
+export function isOpenInterval(interval) {
+    return lowerBoundOpen(interval) && upperBoundOpen(interval);
+}
+
+/**
  * Determines if a relation given represents a point or not, which should be
- *  of the form (x, y)
+ *  of the form (x, y) or [x, y]
  * @param relation {string} the relation to check
- * @todo rename this function: containsPoint(relation)
  */
 export function isPoint(relation) {
+	return isOpenInterval(relation) || isClosedInterval(relation);
+}
 
-/* 	let intervalstart = relation.search(regex_interval);
-	if (intervalstart != -1) {
-		let interval = relation.substring(intervalstart, relation.length).trim();
-		let relation = relation.substring(0, intervalstart).trim();
-	}
+/**
+ * Determines if a relation given represents a solid point to plot. This is 
+ * confusing because (x,y) is the form of a solid point.
+ * @param relation {string} the relation to check
+ */ 
+export function isClosedPoint(relation) {
+    return isOpenInterval(relation);
+}
 
-	return relation === ''; */
-	return relation.search(regex_interval) != -1;
-
+/**
+ * Determines if a relation given represents a solid point to plot. This is 
+ * confusing because [x,y] is the form of an open circle.
+ * @param relation {string} the relation to check
+ */ 
+export function isOpenPoint(relation) {
+    return isClosedInterval(relation);
 }
 
 /******************************************************************************

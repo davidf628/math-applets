@@ -1,6 +1,7 @@
 
 //import { evaluate } from 'mathjs';
 import { E, PI } from './dmath.js';
+import { removeSpaces } from './misc.js';
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -38,6 +39,34 @@ export function isImplicitEquation(expression) {
 		return true;
 	}
 	return false;
+}
+
+/**
+ * Determines whether the given relation is in the form: y=f(x). This also
+ * allows for functions where no 'y=' is specified, as long as the only
+ * variable is 'x'
+ * @param {string} relation - the mathematical relation to check
+ * @returns {boolean} true if the relation is a function, false otherwise
+ */
+export function isFunction(relation) {
+    let vars = getVariables(relation);
+    if ((vars.length == 1 && vars[0] == 'x') || (vars.length == 0)) {
+        return getFunctionName(relation) == 'y';
+    }
+    return false;
+}
+
+/**
+ * Determines whether the given relation is in the form: x=g(y). 
+ * @param {string} relation - the mathematical relation to check
+ * @returns {boolean} true if the relation is a function, false otherwise
+ */
+export function isXFunction(relation) {
+    let vars = getVariables(relation);
+    if (vars.length == 1 && vars[0] == 'y') {
+        return getFunctionName(relation) == 'x';
+    }
+    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -97,18 +126,25 @@ export function removeFunctionName(expression) {
 
 export function getFunctionName(expression) {
 
-	var name = '';
+	var fname = '';
 	var node = math.parse(expression);
-
 	node.traverse(
 		function(node, path, parent) {
 			if(node.type == 'AssignmentNode' || node.type == 'FunctionAssignmentNode') {
-				name = node.name;
+				fname = node.name;
 			}
 		}
 	);
 
-	return name;
+    // if no function name is found, then see if this is of the form f(x)
+    if (fname == '') {
+        let vars = getVariables(relation);
+        if ((vars[0] == 'x' && vars.length == 1) || (vars.length == 0)) {
+            fname = 'y';
+        }
+    }
+
+	return fname;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
