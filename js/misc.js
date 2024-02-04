@@ -48,3 +48,13 @@ export function removeSpaces(s) {
 	}
 	return s;
 }
+
+/**
+ * Determines whether or not a given object is empty, which is surprisingly
+ * difficult in javascript.
+ * @param {object} obj - the object to check
+ * @returns true if obj === {}
+ */
+export function isEmptyObject(obj) {
+    return Object.keys(obj).length === 0;
+}

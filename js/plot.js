@@ -86,7 +86,7 @@ import {
 } from './interval.js';
 
 import {
-    JSXGetBounds
+    JSXGetBounds, isEmptyObject,
 } from './misc.js';
 
 import { POSITIVE_INFINITY, NEGATIVE_INFINITY } from './dmath.js';
@@ -152,9 +152,9 @@ export function plot_function(board, relation, args) {
 	let variable = args.variable ? args.variable : 'x';
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
     let plot_piece = args.piece ? args.piece : { type: 'curve' };
-    let curve = args.piece ? 
-        args.piece.jsxobject : 
-        board.create('curve', [0,0], 0, 0, { visible: false });
+    let curve = isEmptyObject(args.piece) ? 
+        board.create('curve', [0,0], 0, 0, { visible: false }) :
+        args.piece.jsxobject;
 
     [relation, interval] = spliceInterval(relation);
     plot_piece.relation = relation;
@@ -246,9 +246,9 @@ export function plot_xfunction(board, relation, args) {
 	let variable = args.variable ? args.variable : 'y';
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
     let plot_piece = args.piece ? args.piece : { type: 'curve' };
-    let curve = args.piece ? 
-        args.piece.jsxobject : 
-        board.create('curve', [0,0], 0, 0, { visible: false });
+    let curve = isEmptyObject(args.piece) ?  
+        board.create('curve', [0,0], 0, 0, { visible: false }) :
+        args.piece.jsxobject;
 
     [relation, interval] = spliceInterval(relation);
     plot_piece.relation = relation;
@@ -321,9 +321,9 @@ export function plot_point(board, coords, args) {
 	let size = args.size ? args.size : 2;
 	let solid = (args.solid !== undefined) ? args.solid : true;
     let plot_piece = args.piece ? args.piece : { type: 'point' };
-    let point = args.piece ? 
-        args.piece.jsxobject : 
-        board.create('point', [0,0], { visible: false });
+    let point = isEmptyObject(args.piece) ? 
+        board.create('point', [0,0], { visible: false }) :
+        args.piece.jsxobject;
 
 	point.setAttribute({ size: size, strokeColor: color, highlight: false });
     point.setAttribute({ fillColor: solid ? color : 'white' });
@@ -429,10 +429,8 @@ export function plot_polar(curve, expression, tmin, tmax, args) {
  */
 export function plot_parametric(board, relation, args) {
 
-	if(args === undefined) {
-		args = {};
-	}
-
+	args = args === undefined ? {} : args;
+  
     if(relation === '') {
         return {};
     }
@@ -442,9 +440,9 @@ export function plot_parametric(board, relation, args) {
 	let width = args.width ? args.width : 2;
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
     let plot_piece = args.piece ? args.piece : { type: 'curve' };
-    let curve = args.piece ? 
-        args.piece.jsxobject : 
-        board.create('curve', [0,0], 0, 0, { visible: false,  highlight: false });
+    let curve = isEmptyObject(args.piece) ? 
+        board.create('curve', [0,0], 0, 0, { visible: false,  highlight: false }) :
+        args.piece.jsxobject;
 
 	curve.setAttribute({ strokeColor: color, strokeWidth: width, highlight: false });
     curve.setAttribute({ dash: dashed ? dashsetting : 0 });
