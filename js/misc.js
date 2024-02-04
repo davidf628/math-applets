@@ -56,5 +56,5 @@ export function removeSpaces(s) {
  * @returns true if obj === {}
  */
 export function isEmptyObject(obj) {
-    return Object.keys(obj).length === 0;
+    return (obj === undefined) || (Object.keys(obj).length === 0);
 }
