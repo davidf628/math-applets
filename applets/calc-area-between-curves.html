@@ -38,9 +38,9 @@ Slider Min = <input type="text" id="slider_min" value="0">
 <script type='module'>
 
     import { evalstr } from '../js/eval.js';
-    import { setupZoomPanel, toggle_zoomPanel } from '../js/helpers.js';
+    import { setupZoomPanel, toggle_zoomPanel, fullscreen } from '../js/helpers.js';
     import { CheckBox } from '../js/checkbox.js';
-    import { plot, plot_function2, getPlotPiece } from '../js/plot.js';
+    import { plot, plot_function, plot_parametric } from '../js/plot.js';
     import { JSXGetBounds } from '../js/misc.js';
 
     let board = JXG.JSXGraph.initBoard('jxgbox', {
@@ -72,6 +72,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
     window.setupZoomPanel = setupZoomPanel(board, { visible: false, xinit: 20, yinit: 20 });
     window.toggle_zoomPanel = toggle_zoomPanel;
     window.update = update;
+    window.fullscreen = fullscreen;
 
     // Initialize boundaries so that we have something we can update
     let boundaries = [];
@@ -332,7 +333,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
         boundaries[0] = plot_function(board, upper_f, { piece: boundaries[0] });
 
         var lower_f = document.getElementById('lower_bound').value;
-        plot_function(board, lower_f);
+        boundaries[1] = plot_parametric(board, lower_f, { piece: boundaries[1] });
         //boundaries[1] = plot(boundaries[1], lower_f, bounds.xmin, bounds.xmax);//(boundaries[1], lower_f);
         
         var right_f = document.getElementById('right_bound').value;

@@ -69,6 +69,17 @@ export function isXFunction(relation) {
     return false;
 }
 
+/**
+ * Gets the parametric functions from a string in the form <f(t),g(t)>
+ * @param {*} 
+ * @returns 
+ */
+export function getParametricFunctions(relation) {
+    relation = removeSpaces(relation);
+    relation = relation.slice(1, -1);
+    return relation.split(',');
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Converts an implicit equation to an explcit expression by finding the

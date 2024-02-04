@@ -77,9 +77,7 @@
 
 import { 
     isImplicitEquation, 
-    getVariables, 
-    getFunctionName,
-    removeFunctionName,
+    getParametricFunctions,
 } from './functions.js';
 
 import {
@@ -93,7 +91,7 @@ import {
 
 import { POSITIVE_INFINITY, NEGATIVE_INFINITY } from './dmath.js';
 
-import { evalstr, replace_logarithms } from './eval.js';
+import { replace_logarithms } from './eval.js';
 
 // Dependencies:
 //
@@ -214,9 +212,7 @@ export function plot_function(board, relation, args) {
     };
 
     plot_piece.jsxobject = curve;
-
     curve.updateCurve();
-
     return plot_piece;
 	
 }
@@ -238,7 +234,7 @@ export function plot_function(board, relation, args) {
  *  the curve, and the possible endpoints of the curve
  * @returns {PlotPiece} a Plot Piece which contains the curve
  */
-export function plot_function(board, relation, args) {
+export function plot_xfunction(board, relation, args) {
 
 	if(args === undefined) {
 		args = {};
@@ -310,9 +306,7 @@ export function plot_function(board, relation, args) {
     };
 
     plot_piece.jsxobject = curve;
-
     curve.updateCurve();
-
     return plot_piece;
 	
 }
@@ -423,137 +417,71 @@ export function plot_polar(curve, expression, tmin, tmax, args) {
 
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Plots a parametric curve, it requires a start and endpoint value for t.
-//
-// Returns the plotted curve.
-//
-///////////////////////////////////////////////////////////////////////////////
 
-export function plot_parametric(curve, x_t, y_t, tmin, tmax, args) {
+/**
+ * Plots a parametric set of equations over a specified interval of the 
+ * variable t. The interval can be specified adjacent to the function
+ * or within the args, otherwise it will default to -10 and +10.
+ * @param {JSXGraph.Board} board - the JSXGraph board to draw the curve on
+ * @param {string} relation - a string containing the parametric equations. The
+ * form is expected as: <f(t),g(t)> or <f(t),g(t)> (a,b)
+ * @param {*} args 
+ */
+export function plot_parametric(board, relation, args) {
 
 	if(args === undefined) {
 		args = {};
 	}
 
-	var color = args.color ? args.color : 'blue';
-	var density = args.density ? args.density : 0.01;
-	var interval = args.interval ? args.interval : '';
-	var variable = args.variable ? args.variable : 't';
-	var width = args.width ? args.width : 2;
-	var lowerendpoint = args.lowerendpoint ? args.lowerendpoint : -1;
-	var upperendpoint = args.upperendpoint ? args.upperendpoint : -1;
-	var hole = args.hole ? args.hole : -1;
-	var dashed = (args.dashed !== undefined) ? args.dashed : false;
+    if(relation === '') {
+        return {};
+    }
 
-	curve.setAttribute({ strokeColor: color, strokeWidth: width });
-	if(dashed) {
-		curve.setAttribute({ dash: dashsetting });
-	} else {
-		curve.setAttribute({ dash: 0 });
-	}
+	let color = args.color ? args.color : 'blue';
+	let interval = args.interval ? args.interval : '';
+	let width = args.width ? args.width : 2;
+	let dashed = (args.dashed !== undefined) ? args.dashed : false;
+    let plot_piece = args.piece ? args.piece : { type: 'curve' };
+    let curve = args.piece ? 
+        args.piece.jsxobject : 
+        board.create('curve', [0,0], 0, 0, { visible: false,  highlight: false });
 
-	if(hole != -1) {
-		hole.setAttribute({ visible: false });
-	}
+	curve.setAttribute({ strokeColor: color, strokeWidth: width, highlight: false });
+    curve.setAttribute({ dash: dashed ? dashsetting : 0 });
 
-	if(lowerendpoint != -1) {
-		lowerendpoint.setAttribute({ visible: false });
-	}
+    [relation, interval] = spliceInterval(relation);
+    let [x_t, y_t] = getParametricFunctions(relation);
+    let [ tmin, tmax ] = getEndpoints(interval);
 
-	if(upperendpoint != -1) {
-		upperendpoint.setAttribute({ visible: false });
-	}
+    tmin = tmin == NEGATIVE_INFINITY ? -10 : tmin;
+    tmax = tmax == POSITIVE_INFINITY ? 10 : tmax;
 
-	if(x_t == '') {
-		x_t = args.variable;
-	} else if(y_t == '') {
-		y_t = args.variable;
-	}
+    plot_piece.relation = relation;
+    plot_piece.interval = interval === '' ? `(${tmin},${tmax})` 
+        : `${interval.slice(0,1)}${tmin},${tmax}${interval.slice(-1)}`;
 
-	var xFunc = math.compile(x_t);
-	var yFunc = math.compile(y_t);
+	let xFunc = math.compile(x_t);
+	let yFunc = math.compile(y_t);
 
-	var evalX = function(x) {
-					var parameter = {};
-					parameter[variable] = x;
-					return xFunc.eval(parameter);
-				};
+	let evalX = t => xFunc.evaluate({ t: t }); 
+    let evalY = t => yFunc.evaluate({ t: t });
 
-	var evalY = function(x) {
-					var parameter = {};
-					parameter[variable] = x;
-					return yFunc.eval(parameter);
-				};
+    let [x_low, y_low] = [ evalX(tmin), evalY(tmin) ];
+    let [x_high, y_high] = [ evalX(tmax), evalY(tmax) ];    
 
-	if(interval != '') {
+    // Plot the endpoints of the curve
+    plot_piece.lowerendpoint = plot_endpoint(board, [x_low, y_low], 
+        lowerBoundClosed(interval), color, plot_piece.lowerendpoint);
 
-		// See if there is a hole in the graph
-		if(interval.search(regex_hole) != -1) {
+    plot_piece.upperendpoint = plot_endpoint(board, [x_high, y_high], 
+        upperBoundClosed(interval), color, plot_piece.upperendpoint);
 
-			hole_val = parseFloat(interval.split('=')[1]);
-			hole.moveTo([evalX(hole_val), evalY(hole_val)]);
-			hole.setAttribute( { visible: true, strokeColor: color, fillColor: 'white' });
+    curve.X = t => isBetween(t, tmin, tmax) ? evalX(t) : NaN;
+    curve.Y = t => isBetween(t, tmin, tmax) ? evalY(t) : NaN;
 
-		}
-
-		// See if a restricted interval was defined
-		if(interval.search(regex_interval) != -1) {
-
-			restricted_interval = true;
-
-			var lowerval = getLowerEndpoint(interval);
-			var upperval = getUpperEndpoint(interval);
-
-			if(lowerval != NEGATIVE_INFINITY) {
-
-				tmin = lowerval;
-				lowerendpoint.moveTo([evalX(lowerval), evalY(lowerval)]);
-				lowerendpoint.setAttribute({ strokeColor: color, visible: true });
-				if(lowerBoundOpen(interval)) {
-					lowerendpoint.setAttribute({ fillColor: 'white' });
-				} else {
-					lowerendpoint.setAttribute({ fillColor: color });
-				}
-			}
-
-			if(upperval != POSITIVE_INFINITY) {
-
-				tmax = upperval;
-				upperendpoint.moveTo([evalX(upperval), evalY(upperval)]);
-				upperendpoint.setAttribute({ strokeColor: color, visible: true });
-				if(upperBoundOpen(interval)) {
-					upperendpoint.setAttribute({ fillColor: 'white' });
-				} else {
-					upperendpoint.setAttribute({ fillColor: color });
-				}
-			}
-
-		}
-	} // if(interval != '')
-
-	if(!(x_t == '' && y_t == '')) {
-
-		var tValues = math.range(tmin, tmax + density, density).toArray();
-
-		curve.dataX = tValues.map(
-				function(x) {
-					var parameter = {};
-					parameter[variable] = x;
-					return xFunc.evaluate(parameter);
-				});
-
-		curve.dataY = tValues.map(
-				function(x) {
-					var parameter = {};
-					parameter[variable] = x;
-					return yFunc.evaluate(parameter);
-				});
-
-		curve.updateCurve();
-
-	}
+    plot_piece.jsxobject = curve;
+    curve.updateCurve();
+    return plot_piece;
 
 }
 
@@ -663,7 +591,7 @@ export function plot(board, relation, args) {
                 // Plot is a circle
                 if(fname == 'r') {
                     args.variable = 't';
-                    var interval = args.interval ? args.interval : '';
+                    interval = args.interval ? args.interval : '';
                     var tmin = 0;
                     var tmax = 2 * PI;
                     if (interval != '') {
@@ -700,7 +628,7 @@ export function plot(board, relation, args) {
             if(vars[0] == 't' && vars.length == 1) {
                 // Parametrically defined functions
 
-                var interval = args.interval ? args.interval : '';
+                interval = args.interval ? args.interval : '';
                 var bounds = JSXGetBounds(board);
                 var tmin = bounds.xmin < bounds.ymin ? bounds.xmin : bounds.ymin;
                 var tmax = bounds.xmax > bounds.ymax ? bounds.xmax : bounds.ymax;
@@ -725,7 +653,7 @@ export function plot(board, relation, args) {
             if(fname == 'r' && vars[0] == 't') {
 
                 // Polar Graph
-                var interval = args.interval ? args.interval : '';
+                interval = args.interval ? args.interval : '';
                 var tmin = 0;
                 var tmax = 2 * PI;
                 if (interval != '') {
