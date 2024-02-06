@@ -149,7 +149,6 @@ export function plot_function(board, relation, args) {
 	let color = args.color ? args.color : 'blue';
 	let interval = args.interval ? args.interval : '';
 	let width = args.width ? args.width : 2;
-	let variable = args.variable ? args.variable : 'x';
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
     let plot_piece = args.piece ? args.piece : { type: 'curve' };
     let curve = isEmptyObject(args.piece) ? 
@@ -167,18 +166,14 @@ export function plot_function(board, relation, args) {
 
 	// math.js does not support ln notation
 	relation = replace_logarithms(relation);
-
     let expr = math.compile(relation);
-    let parameter = {};
-    parameter[variable] = 0;
 
     let [ start_x, end_x ] = getEndpoints(interval);
 
     // Plot an endpoint if the lower bound is restricted
     if (isBetween(start_x, bounds.xmin, bounds.xmax)) {
-        parameter[variable] = start_x;
         let x_coord = start_x;
-        let y_coord = expr.evaluate(parameter);
+        let y_coord = expr.evaluate({ x: x_coord });
         let solid = lowerBoundClosed(interval);
         plot_piece.lowerendpoint = plot_endpoint(board, [x_coord, y_coord], 
             solid, color, plot_piece.lowerendpoint);
@@ -188,9 +183,8 @@ export function plot_function(board, relation, args) {
 
     // Plot an endpoint if the upper bound is restricted
     if (isBetween(end_x, bounds.xmin, bounds.xmax)) {
-        parameter[variable] = end_x;
         let x_coord = end_x;
-        let y_coord = expr.evaluate(parameter);
+        let y_coord = expr.evaluate({ x: x_coord });
         let solid = upperBoundClosed(interval);
         plot_piece.upperendpoint = plot_endpoint(board, [x_coord, y_coord], 
             solid, color, plot_piece.upperendpoint);
@@ -201,15 +195,8 @@ export function plot_function(board, relation, args) {
     start_x = start_x == NEGATIVE_INFINITY ? bounds.xmin : start_x;
     end_x = end_x == POSITIVE_INFINITY ? bounds.xmax : end_x;
     
-    curve.X = function(x) { return x; };
-    curve.Y = function(x) { 
-        if (isBetween(x, start_x, end_x)) {
-            parameter[variable] = x;
-            return expr.evaluate(parameter); 
-        } else {
-            return NaN;
-        }
-    };
+    curve.X = x => x;
+    curve.Y = x => isBetween(x, start_x, end_x) ? expr.evaluate({ x: x }) : NaN;
 
     plot_piece.jsxobject = curve;
     curve.updateCurve();
@@ -243,7 +230,6 @@ export function plot_xfunction(board, relation, args) {
 	let color = args.color ? args.color : 'blue';
 	let interval = args.interval ? args.interval : '';
 	let width = args.width ? args.width : 2;
-	let variable = args.variable ? args.variable : 'y';
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
     let plot_piece = args.piece ? args.piece : { type: 'curve' };
     let curve = isEmptyObject(args.piece) ?  
@@ -263,16 +249,12 @@ export function plot_xfunction(board, relation, args) {
 	relation = replace_logarithms(relation);
 
     let expr = math.compile(relation);
-    let parameter = {};
-    parameter[variable] = 0;
-
     let [ start_y, end_y ] = getEndpoints(interval);
 
     // Plot an endpoint if the lower bound is restricted
     if (isBetween(start_y, bounds.ymin, bounds.ymax)) {
-        parameter[variable] = start_y;
         let y_coord = start_y;
-        let x_coord = expr.evaluate(parameter);
+        let x_coord = expr.evaluate({ y: y_coord });
         let solid = lowerBoundClosed(interval);
         plot_piece.lowerendpoint = plot_endpoint(board, [x_coord, y_coord], 
             solid, color, plot_piece.lowerendpoint);
@@ -282,9 +264,8 @@ export function plot_xfunction(board, relation, args) {
 
     // Plot an endpoint if the upper bound is restricted
     if (isBetween(end_y, bounds.ymin, bounds.ymax)) {
-        parameter[variable] = end_y;
         let y_coord = end_y;
-        let x_coord = expr.evaluate(parameter);
+        let x_coord = expr.evaluate({ y: y_coord });
         let solid = upperBoundClosed(interval);
         plot_piece.upperendpoint = plot_endpoint(board, [x_coord, y_coord], 
             solid, color, plot_piece.upperendpoint);
@@ -295,15 +276,8 @@ export function plot_xfunction(board, relation, args) {
     start_y = start_y == NEGATIVE_INFINITY ? bounds.ymin : start_y;
     end_y = end_y == POSITIVE_INFINITY ? bounds.ymax : end_y;
     
-    curve.Y = function(y) { return y; };
-    curve.X = function(y) { 
-        if (isBetween(y, start_y, end_y)) {
-            parameter[variable] = y;
-            return expr.evaluate(parameter); 
-        } else {
-            return NaN;
-        }
-    };
+    curve.Y = y => y;
+    curve.X = y => isBetween(y, start_y, end_y) ? expr.evaluate({ y: y }) : NaN;
 
     plot_piece.jsxobject = curve;
     curve.updateCurve();
@@ -370,50 +344,62 @@ export function plot_endpoint(board, coords, solid, color, point) {
     return point;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Plots a polar function, it requires a start and endpoint value for theta.
-//
-// Returns the plotted curve.
-//
-///////////////////////////////////////////////////////////////////////////////
+/**
+ * Plots a polar function r=f(t), bounds for t should be provided as an
+ * interval, but if it not, then the interval will default to -2pi to 2pi.
+ * @param board {JSXGraph.board} - JSXGraph board to draw the curve on
+ * @param relation {string} - the function to draw, this can include a 
+ *  restricted domain
+ * @param args {object} - special arguments to affect the way the function 
+ *  is drawn
+ * @option {string or hex} color: the color of the curve
+ * @option {string} interval: another way to specify a restricted interval
+ * @option {float} width: the width of the curve
+ * @option {string} variable: the variable used within the function
+ * @option {boolean} dashed: whether or not to draw a dashed curve
+ * @option {PlotPiece} piece: a wrapper for a JSX curve object, this contains
+ *  the curve, and the possible endpoints of the curve
+ * @returns {PlotPiece} a Plot Piece which contains the curve
+ */
+export function plot_polar(board, relation, args) {
 
-export function plot_polar(curve, expression, tmin, tmax, args) {
+    args = args === undefined ? {} : args;
+  
+    if(relation === '') {
+        return {};
+    }
 
-	var color = args.color ? args.color : 'blue';
-	var density = args.density ? args.density : 0.01;
-	var width = args.width ? args.width : 2;
-	var dashed = (args.dashed !== undefined) ? args.dashed : false;
+	let color = args.color ? args.color : 'blue';
+	let width = args.width ? args.width : 2;
+    let interval = args.interval ? args.interval : '';
+	let dashed = (args.dashed !== undefined) ? args.dashed : false;
+    let plot_piece = args.piece ? args.piece : { type: 'curve' };
+    let curve = isEmptyObject(args.piece) ?  
+        board.create('curve', [0,0], 0, 0, { visible: false }) :
+        args.piece.jsxobject;
 
-	if(dashed) {
-		curve.setAttribute({ dash: dashsetting });
-	} else {
-		curve.setAttribute({ dash: 0 });
-	}
+    [relation, interval] = spliceInterval(relation);
+    plot_piece.relation = relation;
+    plot_piece.interval = interval;
 
-	// This is an explicit polar function of the form: r(t)
-	if(expression != '') {
+	curve.setAttribute({ strokeWidth: width, strokeColor: color, highlight: false });
+    curve.setAttribute({ dash: dashed ? dashsetting : 0 });
 
-		var expr = math.compile(expression);
+	// math.js does not support ln notation
+	relation = replace_logarithms(relation);
+    let expr = math.compile(relation);
+    let [ tmin, tmax ] = getEndpoints(interval);
 
-		var tValues = math.range(tmin, tmax + density, density).toArray();
-		var rValues = tValues.map(
-				function(x) {
-					return expr.eval({t: x});
-				});
+    // x = r cos(theta), y = r sin(theta)
+    let evalX = t => expr.evaluate({ t: t }) * Math.cos(t);
+    let evalY = t => expr.evaluate({ t: t }) * Math.sin(t);
 
-		curve.dataX = [];
-		curve.dataY = [];
+    curve.X = t => isBetween(t, tmin, tmax) ? evalX(t) : NaN;
+    curve.Y = t => isBetween(t, tmin, tmax) ? evalY(t) : NaN;
 
-		for(var i = 0; i < tValues.length; i++) {
-
-			curve.dataX[i] = rValues[i] * Math.cos(tValues[i]);
-			curve.dataY[i] = rValues[i] * Math.sin(tValues[i]);
-
-		}
-
-		curve.updateParametricCurve();
-	}
+    plot_piece.jsxobject = curve;
+    curve.updateCurve();
+    return plot_piece;
 
 }
 
