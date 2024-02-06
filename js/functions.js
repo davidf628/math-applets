@@ -69,6 +69,25 @@ export function isXFunction(relation) {
     return false;
 }
 
+export function isVectorFunction(relation) {
+    let vars = getVariables(relation);
+    relation = removeSpaces(relation);
+    if (vars.length == 1 && vars[0] == 't') {
+        if (relation.slice(0,1) == '<' && relation.slice(-1) == '>' && relation.search(',') !== -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+export function isPolarFunction(relation) {
+    let vars = getVariables(relation);
+    if (vars.length == 1 && vars[0] == 't') {
+        return getFunctionName(relation) == 'r';
+    }
+    return false;
+}
+
 /**
  * Gets the parametric functions from a string in the form <f(t),g(t)>
  * @param {*} 

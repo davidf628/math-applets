@@ -76,7 +76,7 @@
  */
 
 import { 
-    isImplicitEquation, 
+    isFunction, isXFunction, isVectorFunction, isPolarFunction, isImplicitEquation, 
     getParametricFunctions,
 } from './functions.js';
 
@@ -86,7 +86,7 @@ import {
 } from './interval.js';
 
 import {
-    JSXGetBounds, isEmptyObject,
+    JSXGetBounds, isEmptyObject, removeSpaces,
 } from './misc.js';
 
 import { POSITIVE_INFINITY, NEGATIVE_INFINITY } from './dmath.js';
@@ -510,6 +510,10 @@ export function plot(board, relation, args) {
 
     args = args ? args : {};
 
+    if (relation === '') {
+        return {};
+    }
+
     let color = args.color ? args.color : 'blue';
 
 	relation = relation.toLowerCase();
@@ -530,141 +534,76 @@ export function plot(board, relation, args) {
 
     let relations = relation.split(";");
 
-    for (let relation of relations) {
+    for (let i = 0; i < relations.length; i++) {
+    //for (let plot_item of relations) {
+        let plot_item = relations[i];
+        let interval = '';
 
-        if (isPoint(relation)) {
+        if (isPoint(plot_item)) {
 
-            // The relation is of the form (x,y) or [x,y]
-            let [x, y] = getEndpoints(relation);
-            let piece = plot_point(board, [x, y], { color: color, solid: isClosedPoint(relation) });
+            // The plot_item is of the form (x,y) or [x,y]
+            let [x, y] = getEndpoints(plot_item);
+            let piece = plot_point(board, [x, y], { color: color, solid: isClosedPoint(plot_item) });
             plot_pieces.push(piece);
             continue;
 
         } 
         
-        if (isAsymptote(relation)) {
+      /**   if (isAsymptote(plot_item)) {
             // do whatever
             continue;
-        }
+        }**/
 
         // Check to see if a restricted interval is supplied and retrieve it
-        let [relation, interval] = spliceInterval(relation);
+        [plot_item, interval] = spliceInterval(plot_item);
 
         // math.js does not support ln notation for natural logarithm
-        relation = replace_logarithms(relation);
+        plot_item = replace_logarithms(plot_item);
 
-        if (isConstantFunction(relation)) {
-            if(vars.length == 0) {
-
-                // Plot: horizontal line
-                if(fname == 'y') {
-                    args.density = 1;
-                    curve = plot_function(board, relation, args);
-                }
-
-                // Plot vertical line
-                if(fname == 'x') {
-                    args.variable = 't';
-                    args.density = 1;
-                    var bounds = Bounds(board);
-                    var tmin = bounds.ymin;
-                    var tmax = bounds.ymax;
-                    plot_parametric(curve, relation, 't', tmin, tmax, args);
-                }
-
-                // Plot is a circle
-                if(fname == 'r') {
-                    args.variable = 't';
-                    interval = args.interval ? args.interval : '';
-                    var tmin = 0;
-                    var tmax = 2 * PI;
-                    if (interval != '') {
-                        var lval = getLowerEndpoint(interval);
-                        tmin = lval == NEGATIVE_INFINITY ? -12 * PI : lval;
-                        var uval = getUpperEndpoint(interval);
-                        tmax = uval == POSITIVE_INFINITY ? 12 * PI : uval;
-                    }
-
-                    plot_polar(curve, relation, tmin, tmax, args);
-                }
-            }
-            continue;
-        }
-
-        if (isFunction(relation)) {
+        if (isFunction(plot_item)) {
             // rectangular y = f(x)
             args.interval = interval;
-            let piece = plot_function(board, relation, args);
+            let piece = plot_function(board, plot_item, args);
             plot_pieces.push(piece);
             continue;
         }
 
-        if (isXFunction(relation)) {
+        if (isXFunction(plot_item)) {
             // rectangular x = g(y)
-            args.variable = vars[0];
             args.interval = interval;
-            let piece = plot_parametric(board, relation, args);
+            let piece = plot_xfunction(board, plot_item, args);
             plot_pieces.push(piece);
             continue;
         }
 
-        if (isParametricFuncion(relation)) {
-            if(vars[0] == 't' && vars.length == 1) {
-                // Parametrically defined functions
+        if (isVectorFuncion(plot_item)) {
 
-                interval = args.interval ? args.interval : '';
-                var bounds = JSXGetBounds(board);
-                var tmin = bounds.xmin < bounds.ymin ? bounds.xmin : bounds.ymin;
-                var tmax = bounds.xmax > bounds.ymax ? bounds.xmax : bounds.ymax;
-                if (interval != '') {
-                    var lval = getLowerEndpoint(interval);
-                    tmin = lval == NEGATIVE_INFINITY ? tmin : lval;
-                    var uval = getUpperEndpoint(interval);
-                    tmax = uval == POSITIVE_INFINITY ? tmax : uval;
-                }
-                relation = removeSpaces(relation);
-                var cloc = relation.search(',');
-
-                var x_t = removeSpaces(relation.substring(1, cloc));
-                var y_t = removeSpaces(relation.substring(cloc + 1, relation.length - 1));
-
-                plot_parametric(curve, x_t, y_t, tmin, tmax, args);
-            }
+            args.interval = interval;
+            let piece = plot_parametric(board, plot_item, args);
+            plot_pieces.push(piece);
             continue;
         }
 
-        if (isPolarFunction(relation)) {
-            if(fname == 'r' && vars[0] == 't') {
-
-                // Polar Graph
-                interval = args.interval ? args.interval : '';
-                var tmin = 0;
-                var tmax = 2 * PI;
-                if (interval != '') {
-                    var lval = getLowerEndpoint(interval);
-                    tmin = lval == NEGATIVE_INFINITY ? -12 * PI : lval;
-                    var uval = getUpperEndpoint(interval);
-                    tmax = uval == POSITIVE_INFINITY ? 12 * PI : uval;
-                }
-
-                plot_polar(curve, relation, tmin, tmax, args);
-
-            }
+        if (isPolarFunction(plot_item)) {
+           
+            args.interval = interval;
+            let piece = plot_polar(board, plot_item, args);
+            plot_pieces.push(piece);
             continue;
         }
 
-        if (isSequence(relation)) {
+        if (isSequence(plot_item)) {
             // do whatever
             continue;
         }
 
-        if (isImplicitEquation(relation)) {
-            relation = convertImplicitEquation(relation);
-            implicit_plot(relation, args);
+        if (isImplicitEquation(plot_item)) {
+            plot_item = convertImplicitEquation(plot_item);
+            implicit_plot(plot_item, args);
             continue;
         }
 
-        
+    
     }
 
     return plot_pieces;
