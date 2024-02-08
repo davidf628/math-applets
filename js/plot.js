@@ -518,6 +518,14 @@ export function plot(board, relation, args) {
     // remove any previously plotted graph from the board
     if (!isEmptyObject(args.pieces)) {
         for(let piece of args.pieces) {
+            if (piece.type == 'curve') {
+                if (piece.lowerendpoint) {
+                    board.removeObject(piece.lowerendpoint);
+                }
+                if (piece.upperendpoint) {
+                    board.removeObject(piece.upperendpoint);
+                }
+            }
             board.removeObject(piece.jsxobject)
         }
         args.pieces = {};
@@ -565,7 +573,7 @@ export function plot(board, relation, args) {
             continue;
         }
 
-        if (isVectorFuncion(plot_item)) {
+        if (isVectorFunction(plot_item)) {
             // paramteric: <f(t),g(t)>
             let piece = plot_parametric(board, plot_item, args);
             plot_pieces.push(piece);

@@ -4,30 +4,21 @@ import { NEGATIVE_INFINITY, POSITIVE_INFINITY } from './dmath.js';
 
 // Pattern for a restricted interval:
 
-const regex_interval2 = 
-    /(\(|\[\{)\s*/ +                         // (, [, or {
-    /[\w\+\-\*\/\^\(\)\.]*\s*/ +             // -2, 1.8, -inf, -oo, pi/2, etc.
-    /,\s*/ +                                 // ,
-    /[\w\+\-\*\/\^\(\)\.]*\\s*/ +            //  -2, 1.8, +inf, +oo, pi/4, etc. 
-    /(\)|\]|\})/;                            // ), ], or }
-
-const regex_interval = 
-    '(\\(|\\[)\\s*' +                         // ( or [
-    '[\\w\\+\\-\\*\\/\\^\\(\\)\\.]*\\s*' +       // -2, 1.8, -inf, -oo, pi/2, etc.
-    ',\\s*' +                                  // ,
-    '[\\w\\+\\-\\*\\/\\^\\(\\)\\.]*\\s*' +      // "," then -2, 1.8, +inf, +oo, pi/4, etc. 
-    '(\\)|\\])';                              // ] or )
+const interval_pattern = 
+    [ /(\(|\[|\{)\s*/,                         // (, [, or {
+      /[\w\+\-\*\/\^\(\)\.]*\s*/,               // -2, 1.8, -inf, -oo, pi/2, etc.
+      /,\s*/,                                   // ,
+      /[\w\+\-\*\/\^\(\)\.]*\s*/,               //  -2, 1.8, +inf, +oo, pi/4, etc. 
+      /(\)|\]|\})/ ];                          // ), ], or }
+const regex_interval = combineRegex(interval_pattern);
                        
 
 // Pattern for a hole in the graph:
 
-const regex_hole2 = 
+const hole_pattern = 
         /[Xx]\s*!=\s*/ +            // x !=
         /(-?\d*\.?\d*)/;            // -2, 1.8, etc.
-
-
-const regex_hole = '[Xx]\\s*!=\\s*' +          // x !=
-				   '(-?\\d*\\.?\\d*)';        // -2, 1.8, etc.
+const regex_hole = combineRegex(hole_pattern);
 
 /******************************************************************************
  * A function can be defined such as: y = 2x-5 (-2,5] and the interval needs
@@ -131,7 +122,9 @@ export function getHoleValue(interval) {
 /////////////////////////////////////////////////////////////////
 
 export function isInterval(interval) {
-    return interval.search(regex_interval) != -1;
+    interval = removeSpaces(interval);
+    let regex = combineRegex( [/^/, regex_interval, /$/ ]);
+    return interval.search(regex) != -1;
 }
 
 export function lowerBoundOpen(interval) {
