@@ -330,7 +330,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
 
         let upper_f = document.getElementById('upper_bound').value;
         //boundaries[0] = plot(boundaries[0], upper_f, bounds.xmin, bounds.xmax);//plot_relation(boundaries[0], upper_f);
-        boundaries[0] = plot(board, upper_f, { piece: boundaries[0] });
+        boundaries[0] = plot(board, upper_f, { pieces: boundaries[0] });
 
         var lower_f = document.getElementById('lower_bound').value;
         boundaries[1] = plot_parametric(board, lower_f, { piece: boundaries[1] });

@@ -39,7 +39,13 @@ export function JSXSetBounds(board, bounds, keepAspectRatio) {
 	return board.setBoundingBox([xmin, ymax, xmax, ymin], keepAspectRatio);
 }
 
-
+export function combineRegex(...regexes) {
+    //let allFlags = regex1.flags + regex2.flags;
+    //let uniqueFlags = new Set(allFlags.split(''));
+    //allFlags = [...uniqueFlags].join('');
+    //let combined = new RegExp(regex1.source + regex2.source, allFlags);
+    return (...regexes) => new RegExp(regexes.map(regex => regex.source).join("|"))
+}
 
 
 export function removeSpaces(s) {

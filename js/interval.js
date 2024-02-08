@@ -1,8 +1,15 @@
 import { evalstr } from './eval.js';
-import { removeSpaces } from './misc.js';
+import { combineRegex, removeSpaces } from './misc.js';
 import { NEGATIVE_INFINITY, POSITIVE_INFINITY } from './dmath.js';
 
 // Pattern for a restricted interval:
+
+const regex_interval2 = 
+    /(\(|\[\{)\s*/ +                         // (, [, or {
+    /[\w\+\-\*\/\^\(\)\.]*\s*/ +             // -2, 1.8, -inf, -oo, pi/2, etc.
+    /,\s*/ +                                 // ,
+    /[\w\+\-\*\/\^\(\)\.]*\\s*/ +            //  -2, 1.8, +inf, +oo, pi/4, etc. 
+    /(\)|\]|\})/;                            // ), ], or }
 
 const regex_interval = 
     '(\\(|\\[)\\s*' +                         // ( or [
@@ -13,6 +20,11 @@ const regex_interval =
                        
 
 // Pattern for a hole in the graph:
+
+const regex_hole2 = 
+        /[Xx]\s*!=\s*/ +            // x !=
+        /(-?\d*\.?\d*)/;            // -2, 1.8, etc.
+
 
 const regex_hole = '[Xx]\\s*!=\\s*' +          // x !=
 				   '(-?\\d*\\.?\\d*)';        // -2, 1.8, etc.

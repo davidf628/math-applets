@@ -146,8 +146,8 @@ export function plot_function(board, relation, args) {
 		args = {};
 	}
 
+    let interval;
 	let color = args.color ? args.color : 'blue';
-	let interval = args.interval ? args.interval : '';
 	let width = args.width ? args.width : 2;
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
     let plot_piece = args.piece ? args.piece : { type: 'curve' };
@@ -174,9 +174,8 @@ export function plot_function(board, relation, args) {
     if (isBetween(start_x, bounds.xmin, bounds.xmax)) {
         let x_coord = start_x;
         let y_coord = expr.evaluate({ x: x_coord });
-        let solid = lowerBoundClosed(interval);
         plot_piece.lowerendpoint = plot_endpoint(board, [x_coord, y_coord], 
-            solid, color, plot_piece.lowerendpoint);
+            lowerBoundClosed(interval), color, plot_piece.lowerendpoint);
     } else if (plot_piece.lowerendpoint) {
         plot_piece.lowerendpoint.setAttribute({ visible: false });
     }
@@ -185,9 +184,8 @@ export function plot_function(board, relation, args) {
     if (isBetween(end_x, bounds.xmin, bounds.xmax)) {
         let x_coord = end_x;
         let y_coord = expr.evaluate({ x: x_coord });
-        let solid = upperBoundClosed(interval);
         plot_piece.upperendpoint = plot_endpoint(board, [x_coord, y_coord], 
-            solid, color, plot_piece.upperendpoint);
+            upperBoundClosed(interval), color, plot_piece.upperendpoint);
     } else if (plot_piece.upperendpoint) {
         plot_piece.upperendpoint.setAttribute({ visible: false });
     }
@@ -213,7 +211,6 @@ export function plot_function(board, relation, args) {
  * @param args {object} - special arguments to affect the way the function 
  *  is drawn
  * @option {string or hex} color: the color of the curve
- * @option {string} interval: another way to specify a restricted interval
  * @option {float} width: the width of the curve
  * @option {string} variable: the variable used within the function
  * @option {boolean} dashed: whether or not to draw a dashed curve
@@ -227,8 +224,8 @@ export function plot_xfunction(board, relation, args) {
 		args = {};
 	}
 
+    let interval = '';
 	let color = args.color ? args.color : 'blue';
-	let interval = args.interval ? args.interval : '';
 	let width = args.width ? args.width : 2;
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
     let plot_piece = args.piece ? args.piece : { type: 'curve' };
@@ -353,7 +350,6 @@ export function plot_endpoint(board, coords, solid, color, point) {
  * @param args {object} - special arguments to affect the way the function 
  *  is drawn
  * @option {string or hex} color: the color of the curve
- * @option {string} interval: another way to specify a restricted interval
  * @option {float} width: the width of the curve
  * @option {string} variable: the variable used within the function
  * @option {boolean} dashed: whether or not to draw a dashed curve
@@ -369,9 +365,9 @@ export function plot_polar(board, relation, args) {
         return {};
     }
 
+    let interval = '';
 	let color = args.color ? args.color : 'blue';
 	let width = args.width ? args.width : 2;
-    let interval = args.interval ? args.interval : '';
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
     let plot_piece = args.piece ? args.piece : { type: 'curve' };
     let curve = isEmptyObject(args.piece) ?  
@@ -421,8 +417,8 @@ export function plot_parametric(board, relation, args) {
         return {};
     }
 
+    let interval = '';
 	let color = args.color ? args.color : 'blue';
-	let interval = args.interval ? args.interval : '';
 	let width = args.width ? args.width : 2;
 	let dashed = (args.dashed !== undefined) ? args.dashed : false;
     let plot_piece = args.piece ? args.piece : { type: 'curve' };
@@ -520,10 +516,11 @@ export function plot(board, relation, args) {
     relation = removeSpaces(relation);
 
     // remove any previously plotted graph from the board
-    if (args.pieces) {
+    if (!isEmptyObject(args.pieces)) {
         for(let piece of args.pieces) {
-            board.remove(piece.jsxobject)
+            board.removeObject(piece.jsxobject)
         }
+        args.pieces = {};
     }
 
     // remove curly braces indicating a piecewise function
@@ -534,10 +531,7 @@ export function plot(board, relation, args) {
 
     let relations = relation.split(";");
 
-    for (let i = 0; i < relations.length; i++) {
-    //for (let plot_item of relations) {
-        let plot_item = relations[i];
-        let interval = '';
+    for (let plot_item of relations) {
 
         if (isPoint(plot_item)) {
 
@@ -554,15 +548,11 @@ export function plot(board, relation, args) {
             continue;
         }**/
 
-        // Check to see if a restricted interval is supplied and retrieve it
-        [plot_item, interval] = spliceInterval(plot_item);
-
         // math.js does not support ln notation for natural logarithm
         plot_item = replace_logarithms(plot_item);
 
         if (isFunction(plot_item)) {
             // rectangular y = f(x)
-            args.interval = interval;
             let piece = plot_function(board, plot_item, args);
             plot_pieces.push(piece);
             continue;
@@ -570,23 +560,20 @@ export function plot(board, relation, args) {
 
         if (isXFunction(plot_item)) {
             // rectangular x = g(y)
-            args.interval = interval;
             let piece = plot_xfunction(board, plot_item, args);
             plot_pieces.push(piece);
             continue;
         }
 
         if (isVectorFuncion(plot_item)) {
-
-            args.interval = interval;
+            // paramteric: <f(t),g(t)>
             let piece = plot_parametric(board, plot_item, args);
             plot_pieces.push(piece);
             continue;
         }
 
         if (isPolarFunction(plot_item)) {
-           
-            args.interval = interval;
+            // r=f(t)
             let piece = plot_polar(board, plot_item, args);
             plot_pieces.push(piece);
             continue;

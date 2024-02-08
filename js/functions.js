@@ -2,6 +2,7 @@
 //import { evaluate } from 'mathjs';
 import { E, PI } from './dmath.js';
 import { removeSpaces } from './misc.js';
+import { removeInterval } from './interval.js';
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -49,11 +50,8 @@ export function isImplicitEquation(expression) {
  * @returns {boolean} true if the relation is a function, false otherwise
  */
 export function isFunction(relation) {
-    let vars = getVariables(relation);
-    if ((vars.length == 1 && vars[0] == 'x') || (vars.length == 0)) {
-        return getFunctionName(relation) == 'y';
-    }
-    return false;
+    let vars = getVariables(removeInterval(relation));
+    return (vars.length == 1 && vars[0] == 'x') || (vars.length == 0);
 }
 
 /**
@@ -62,16 +60,13 @@ export function isFunction(relation) {
  * @returns {boolean} true if the relation is a function, false otherwise
  */
 export function isXFunction(relation) {
-    let vars = getVariables(relation);
-    if (vars.length == 1 && vars[0] == 'y') {
-        return getFunctionName(relation) == 'x';
-    }
-    return false;
+    let vars = getVariables(removeInterval(relation));
+    return (vars.length == 1 && vars[0] == 'y');
 }
 
 export function isVectorFunction(relation) {
+    relation = removeSpaces(removeInterval(relation));
     let vars = getVariables(relation);
-    relation = removeSpaces(relation);
     if (vars.length == 1 && vars[0] == 't') {
         if (relation.slice(0,1) == '<' && relation.slice(-1) == '>' && relation.search(',') !== -1) {
             return true;
@@ -81,11 +76,8 @@ export function isVectorFunction(relation) {
 }
 
 export function isPolarFunction(relation) {
-    let vars = getVariables(relation);
-    if (vars.length == 1 && vars[0] == 't') {
-        return getFunctionName(relation) == 'r';
-    }
-    return false;
+    let vars = getVariables(removeInterval(relation));
+    return vars.length == 1 && vars[0] == 't';
 }
 
 /**
