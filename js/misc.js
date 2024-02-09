@@ -51,6 +51,11 @@ export function combineRegex(regexes) {
     return new RegExp(new_regex);
 }
 
+export function htmlify(str) {
+    str = str.replace('<', '&lt;');
+    str = str.replace('>', '&gt;');
+    return str;
+}
 
 export function removeSpaces(s) {
 	while(s.search(' ') != -1) {

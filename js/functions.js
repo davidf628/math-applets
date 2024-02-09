@@ -1,5 +1,5 @@
 
-//import { evaluate } from 'mathjs';
+//import { evaluate, parse } from 'mathjs';
 import { E, PI } from './dmath.js';
 import { removeSpaces } from './misc.js';
 import { removeInterval } from './interval.js';
@@ -139,42 +139,38 @@ export function removeFunctionName(expression) {
 	}
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Determines the name of an explicitly defined function using the math.js
-//   parser.
-//
-///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Determines the name of an explicity defined function of the form y=f(x).
+ * Ignores implicity defined functions and parametric sets of equations.
+ * @param {string} expression - the mathematical expression to check
+ * @returns a character representing the function name, or else an empty string
+ */
 export function getFunctionName(expression) {
 
 	var fname = '';
-	var node = math.parse(expression);
-	node.traverse(
-		function(node, path, parent) {
-			if(node.type == 'AssignmentNode' || node.type == 'FunctionAssignmentNode') {
-				fname = node.name;
-			}
-		}
-	);
-
-    // if no function name is found, then see if this is of the form f(x)
-    if (fname == '') {
-        let vars = getVariables(relation);
-        if ((vars[0] == 'x' && vars.length == 1) || (vars.length == 0)) {
-            fname = 'y';
-        }
+    try {
+        var node = math.parse(expression);
+        node.traverse(
+            function(node, path, parent) {
+                if(node.type == 'AssignmentNode' || node.type == 'FunctionAssignmentNode') {
+                    fname = node.name;
+                }
+            }
+        );
+    } catch (err) {
+        return '';
     }
-
 	return fname;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Changes all the instances of the variable 'x' and replaces it with
-//
-///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Determines the variables that are present in a mathematical expression
+ * @param {string} expression - the expression to test
+ * @returns an array containing the variables present, or an empty string
+ *  if there was a syntax error
+ */
 export function getVariables(expression) {
 
 	// Gets a list of all variables within an expression - note that implicit multiplication doesn't work for two variables in a row
@@ -186,22 +182,46 @@ export function getVariables(expression) {
 		'cumsum', 'mad', 'max', 'mean', 'median', 'min', 'mode', 'prod', 'std', 'sum', 'variance', 'acos', 'acosh', 'acot', 'acoth',
 		'acsc', 'acsch', 'asec', 'asech', 'asin', 'asinh', 'atan', 'atan2', 'atanh', 'cos', 'cosh', 'cot', 'coth', 'csc', 'csch', 'sec',
 		'sech', 'sin', 'sinh', 'tan', 'tanh'];
-	var variables = [];
-	var func = getFunctionName(expression);
+	let variables = [];
+	let func = getFunctionName(expression);
 
-	var node = math.parse(expression);
+    // if the expression represents a parametric set of equations then
+    // split them up into a single expression where the components are added
+    // together. This makes a valid math expression that mathjs can then use
+    // to determine the variables involved.
+    if (func == '') {
+        // Check to see if the equation is in parametric form
+        if (expression.slice(0,1) == '<' && expression.slice(-1) == '>' 
+                && expression.search(',') !== -1) {
+            expression = expression.slice(1, -1);
+            expression = expression.split(',').join('+');
+        }
+        // Assume then the equation is in implicit form
+        expression = convertImplicitEquation(expression);
+    }
 
-	node.traverse(
-		function(node, path, parent) {
-			if(node.type == 'SymbolNode') {
-				if(node.name != func && !knownConstants.includes(node.name) && !knownFunctions.includes(node.name) && !variables.includes(node.name)) {
-					variables.push(node.name);
-				}
-			}
-		}
-	);
+    try {
+        let node = math.parse(expression);
 
-	return variables;
+        node.traverse(
+            function(node, path, parent) {
+                if (node.type == 'SymbolNode') {
+                    if (node.name !== func 
+                        && !knownConstants.includes(node.name) 
+                        && !knownFunctions.includes(node.name) 
+                        && !variables.includes(node.name)) {
+                            
+                        variables.push(node.name);
+                    }
+                }
+            }
+        );
+        return variables;
+
+    } catch (err) {
+        // math.js found a syntax error and therefore varibles could not be found
+        return '';
+    }
 
 }
 
