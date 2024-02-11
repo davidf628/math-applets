@@ -25,40 +25,38 @@ const regex_hole = combineRegex(hole_pattern);
  *  to be removed for graphing this function determines if an interval exists 
  *  and returns it if so, or a blank string if it does not
  * @param relation {string} The relation to check for an interval 
+ * @returns if an interval exists, it will return the interval. If no interval
+ *  exists then it will return '', and if a syntax error occurs in the interval
+ *  then 'undefined' is returned
 */
 export function getInterval(relation) {
 
-	var interval = '';
-	var intervalstart = 0;
+    // Look for the 'on' keyword to identify a restricted interal
+    if (relation.search('on') !== -1) {
+        relation = removeSpaces(relation);
+        let interval_start = relation.search('on')+2;
+        let interval = relation.substring(interval_start);
+        if ((interval.search(regex_interval) !== -1) || (interval.search(regex_hole) !== -1)) {
+            return interval;
+        } else {
+            console.error(`\n${relation} contains a mal-formed interval\n`);
+            return undefined;
+        }
+    } else {
+        return '';
+    }
 
-	intervalstart = relation.search(regex_interval);
-	if (intervalstart != -1) {
-		interval = relation.substring(intervalstart, relation.length).trim();
-	}
-
-	intervalstart = relation.search(regex_hole);
-	if (intervalstart != -1) {
-		interval = relation.substring(intervalstart, relation.length).trim();
-	}
-
-	return interval;
 }
 
+/**
+ * Removes the specified interval from a function string
+ * @param {string} relation an expression of the form y=2x+5 (-2,5)
+ * @returns the expression without the specified interval
+ */
 export function removeInterval(relation) {
-
-	let intervalstart = 0;
-
-	intervalstart = relation.search(regex_interval);
-	if (intervalstart != -1) {
-		relation = relation.substring(0, intervalstart).trim();
-	}
-
-	intervalstart = relation.search(regex_hole);
-	if (intervalstart != -1) {
-		relation = relation.substring(0, intervalstart).trim();
-	}
-
-	return relation;
+    relation = relation.replace(getInterval(relation),'');
+    relation = relation.replace('on','').trim();
+    return relation;
 }
 
 export function spliceInterval(relation) {

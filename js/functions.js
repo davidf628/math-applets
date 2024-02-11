@@ -35,7 +35,7 @@ export function preprocessFunction (s) {
 
 export function isImplicitEquation(expression) {
 	try {
-		const node = math.parse(expression);
+		math.parse(expression);
 	} catch(err) {
 		return true;
 	}

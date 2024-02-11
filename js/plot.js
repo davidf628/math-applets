@@ -27,15 +27,16 @@
  *       defined on the interval x in (-oo, oo)
  *   - x = 2y+5  or g(y) =3y+4: both will be interpreted as functions of y
  *       and defined on the interval y in (-oo, oo)
- *   - y = x^2 - 1 (-3, 8]: interpreted as a function of x defined on the 
+ *   - y = x^2 - 1 on (-3, 8]: interpreted as a function of x defined on the 
  *       interval from x = -3 to x = 8
+ *   - y = 3x - 4 on x!=2: will produce a graph with a hole at (2, 2)
  *   Notes: oo can be used to represent infinity, and any variable names
  *    can be used as long as the independent and dependent variable are
  *    well defined
  * 
  * Parametric Equations: (independent count: 1, dependent count: 2)
  * --------------------
- *   - <2t, -8t-1> (-4, 3]: parametric equations where the parameter t
+ *   - <2t, -8t-1> on (-4, 3]: parametric equations where the parameter t
  *       is restricted from t = -4 to t = 3
  *   Notes: an interval for t must be supplied and neither endpoint
  *    can be infinity
@@ -64,7 +65,7 @@
  *     collected together in curly braces
  *   - { (2,5); (-3, 1); (6,10) }: plots a set of points
  *   - { 1 / (x+1)^2; x!=-1 }: Graphs a rational with an asymptote
- *   - { 2x (-oo,4); x^2-1 [4, 5]; -x+4 (5,oo) }: piecewise defined function
+ *   - { 2x on (-oo,4); x^2-1 on [4, 5]; -x+4 on (5,oo) }: piecewise defined function
  * 
  * 
  * All graphs can be drawn using solid or dashed lines, and a step interval

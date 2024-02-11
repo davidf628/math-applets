@@ -10,7 +10,7 @@
             "type": "node",
             "program": "${workspaceFolder}/test.js",
             "cwd": "${workspaceFolder}",
-            "runtimeExecutable": "/opt/homebrew/bin/deno",
+            "runtimeExecutable": "node",
             "runtimeArgs": [
                 "run",
                 "--inspect-wait",
