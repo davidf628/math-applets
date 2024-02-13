@@ -29,16 +29,16 @@ X Minimum = <input type="text" id="left_bound" value="">
 <br />
 Slider Min = <input type="text" id="slider_min" value="0">
 &emsp;&emsp;Slider Max = <input type="text" id="slider_max" value="10">
-&emsp;&emsp;<input type="button" value="Toggle Zoom Panel" onClick="toggle_zoomPanel()">
+&emsp;&emsp;<input type="button" value="Toggle Zoom Panel" id="toggle-zoom-panel">
 <br /><br />
 
-<div id="jxgbox" class="jxgbox" style="width:1000px; height:720px; float:left"></div>
+<div id="jxgbox" class="jxgbox" style="width:1000px; height:720px; float:left; resize: both"></div>
 <div id="display" class="jxgbox" style="width:320px; height:720px; float:left"></div>
 
 <script type='module'>
 
     import { evalstr } from '../js/eval.js';
-    import { setupZoomPanel, toggle_zoomPanel, fullscreen } from '../js/helpers.js';
+    import { ZoomPanel, fullscreen } from '../js/helpers.js';
     import { CheckBox } from '../js/checkbox.js';
     import { plot, plot_function, plot_parametric, plot_xfunction, plot_polar } from '../js/plot.js';
     import { JSXGetBounds } from '../js/misc.js';
@@ -69,18 +69,14 @@ Slider Min = <input type="text" id="slider_min" value="0">
     });	
 			
     // Set up x and y zoom sliders
-    window.setupZoomPanel = setupZoomPanel(board, { visible: false, xinit: 20, yinit: 20 });
-    window.toggle_zoomPanel = toggle_zoomPanel;
+    let zoomPanel = new ZoomPanel(board, { visible: false, xinit: 20, yinit: 20 });
+    document.getElementById('toggle-zoom-panel').onclick = () => { zoomPanel.toggleVisible() };
+
     window.update = update;
     window.fullscreen = fullscreen;
 
     // Initialize boundaries so that we have something we can update
     let boundaries = [];
-
-    let f = math.compile('(x-2)/((x-3)(x-4))');
-
-    //let myFunc = board.create('functiongraph', [(x) => f.evaluate({x: x})]);
-    window.myCurve = board.create('curve', [(x) => x, (x) => f.evaluate({x: x})]);
 
     let slider_min = parseInt(document.getElementById('slider_min').value);
     let slider_max = parseInt(document.getElementById('slider_max').value);
@@ -329,20 +325,14 @@ Slider Min = <input type="text" id="slider_min" value="0">
         let bounds = JSXGetBounds(board);
 
         let upper_f = document.getElementById('upper_bound').value;
-        //boundaries[0] = plot(boundaries[0], upper_f, bounds.xmin, bounds.xmax);//plot_relation(boundaries[0], upper_f);
-        boundaries[0] = plot(board, upper_f, { pieces: boundaries[0] });
+        let lower_f = document.getElementById('lower_bound').value;
+        let right_f = document.getElementById('right_bound').value;
+        let left_f = document.getElementById('left_bound').value;
 
-        var lower_f = document.getElementById('lower_bound').value;
-        boundaries[1] = plot_parametric(board, lower_f, { piece: boundaries[1] });
-        //boundaries[1] = plot(boundaries[1], lower_f, bounds.xmin, bounds.xmax);//(boundaries[1], lower_f);
-        
-        var right_f = document.getElementById('right_bound').value;
-        boundaries[2] = plot_xfunction(board, right_f, { piece: boundaries[2] });
-        //boundaries[2] = plot(boundaries[2], right_f, bounds.ymin, bounds.ymax);//plot_relation(boundaries[2], right_f);
-        
-        var left_f = document.getElementById('left_bound').value;
-        boundaries[3] = plot_polar(board, left_f, {piece: boundaries[3] });
-        //boundaries[3] = plot(boundaries[3], left_f, bounds.ymin, bounds.ymax);//plot_relation(boundaries[3], left_f);	
+        boundaries[0] = plot(board, upper_f, { pieces: boundaries[0] });
+        boundaries[1] = plot(board, lower_f, { pieces: boundaries[1] });
+        boundaries[2] = plot(board, right_f, { pieces: boundaries[2] });
+        boundaries[3] = plot(board, left_f, { pieces: boundaries[3] });
             
         slider_min = parseFloat(document.getElementById('slider_min').value);
         slider_max = parseFloat(document.getElementById('slider_max').value);
@@ -355,37 +345,6 @@ Slider Min = <input type="text" id="slider_min" value="0">
         board.update();	
             
     }
-
-    // function plot_relation(curve, ogtxt) {
-    //     if(ogtxt.indexOf('=') != -1) {
-    //         if(ogtxt.charAt(0) == 'y') {
-    //             // This is a function of the form y = f(x)
-    //             strf = ogtxt.slice(2);
-    //             strf = changeVariable(strf, 'x', 't');
-    //             relation = board.jc.snippet(strf, true, 't', true);
-    //             curve.X = function(t) { return t; };
-    //             curve.Y = relation;
-    //             curve.setAttribute( { visible: true } );
-    //             curve.updateCurve();
-    //         }
-    //         if(ogtxt.charAt(0) == 'x') {
-    //             // This is a function of the form x = g(y)
-    //             strf = ogtxt.slice(2);
-    //             strf = changeVariable(strf, 'y', 't');
-    //             relation = board.jc.snippet(strf, true, 't', true);
-    //             curve.X = relation;
-    //             curve.Y = function(t) { return t; };
-    //             curve.setAttribute( { visible: true } );
-    //             curve.updateCurve();
-    //         }
-    //     } else if(ogtxt == '') {
-    //         curve.X == function(t) { return 0; };
-    //         curve.Y == function(t) { return 0; };
-    //         curve.setAttribute( { visible: false } );
-    //         curve.updateCurve();
-    //     }
-    //     return curve;
-    // }
 
     function changeVariable(s, a, b) {
 

@@ -51,7 +51,12 @@ export function isImplicitEquation(expression) {
  */
 export function isFunction(relation) {
     let vars = getVariables(removeInterval(relation));
-    return (vars.length == 1 && vars[0] == 'x') || (vars.length == 0);
+    let fname = getFunctionName(relation);
+    if (fname == 'x' || fname == 'r') {
+        return false;
+    } else {
+        return (fname == 'y') || (vars.length == 1 && vars[0] == 'x') || (vars.length == 0);
+    }
 }
 
 /**
@@ -61,7 +66,12 @@ export function isFunction(relation) {
  */
 export function isXFunction(relation) {
     let vars = getVariables(removeInterval(relation));
-    return (vars.length == 1 && vars[0] == 'y');
+    let fname = getFunctionName(relation);
+    if (fname == 'y' || fname == 'r') {
+        return false;
+    } else {
+        return (fname == 'x') || (vars.length == 1 && vars[0] == 'y');
+    }
 }
 
 export function isVectorFunction(relation) {
@@ -76,8 +86,13 @@ export function isVectorFunction(relation) {
 }
 
 export function isPolarFunction(relation) {
+    let fname = getFunctionName(relation);
     let vars = getVariables(removeInterval(relation));
-    return vars.length == 1 && vars[0] == 't';
+    if ((fname == 'x') || (fname == 'y')) {
+        return false;
+    } else {
+        return (fname == 'r') || (vars.length == 1 && vars[0] == 't');
+    }
 }
 
 /**
