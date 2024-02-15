@@ -62,10 +62,10 @@
  * Piecewise Defined Functions:
  * ---------------------------
  *   - Piecewise defined functions can contain many of the above items
- *     collected together in curly braces
- *   - { (2,5); (-3, 1); (6,10) }: plots a set of points
- *   - { 1 / (x+1)^2; x!=-1 }: Graphs a rational with an asymptote
- *   - { 2x on (-oo,4); x^2-1 on [4, 5]; -x+4 on (5,oo) }: piecewise defined function
+ *     collected together and separated by semicolons
+ *   - (2,5); (-3, 1); (6,10) : plots a set of points
+ *   - 1 / (x+1)^2; x!=-1 : Graphs a rational with an asymptote
+ *   - 2x on (-oo,4); x^2-1 on [4, 5]; -x+4 on (5,oo) : piecewise defined function
  * 
  * 
  * All graphs can be drawn using solid or dashed lines, and a step interval
@@ -532,12 +532,7 @@ export function plot(board, relation, args) {
         args.pieces = {};
     }
 
-    // remove curly braces indicating a piecewise function
-    relation = relation.search('{') != -1 ? relation.substring(1) : relation;
-    relation = relation.search('}') != -1 ? relation.substring(0, -1) : relation;
-
     let plot_pieces = [];
-
     let relations = relation.split(";");
 
     for (let plot_item of relations) {
