@@ -84,8 +84,6 @@ export class ZoomPanel {
             [ function() { return getXPct(board, xstart + 0.03); }, function() { return getYPct(board, ystart + 0.1); }], 
             [ function() { return getXPct(board, xend - 0.07); }, function() { return getYPct(board, ystart + 0.1); }], 
             [ymin, yinit, ymax]]);
-    
-        console.log(`horiz zoom: ${this.slider_horiz_zoom.Value()}`);
 
         this.slider_horiz_zoom.on('drag', () => { this.changeScale() } );
         this.slider_vert_zoom.on('drag', () => { this.changeScale() } );

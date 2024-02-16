@@ -198,6 +198,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
         }
     };
 	
+    // The width of the rectangle
     let width = 0.25;
 
     // horizontal rectangle: P1 = ( g1(y - w/2), y - w/2  )
@@ -206,7 +207,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
     let P1 = board.create('point', [
         function() {
             if(horizontal_rectangle.isChecked()) {
-                left_f = document.getElementById('left_bound').value;
+                let left_f = document.getElementById('left_bound').value;
                 if(left_f != '') {
                     return evaluate(left_f, slider.Value() - (width / 2), 'y');
                 } else return 0;
@@ -218,7 +219,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
             if(horizontal_rectangle.isChecked()) {
                 return slider.Value() - (width / 2); 
             } else if (vertical_rectangle.isChecked()) {
-                lower_f = document.getElementById('lower_bound').value;
+                let lower_f = document.getElementById('lower_bound').value;
                 if(lower_f != '') {
                     return evaluate(lower_f, slider.Value() + (width / 2), 'x');
                 } else return 0;
@@ -233,8 +234,8 @@ Slider Min = <input type="text" id="slider_min" value="0">
     let P2 = board.create('point', [
         function() { 
             if(horizontal_rectangle.isChecked()) {
-                right_f = document.getElementById('right_bound').value;
-                if(right_f != '') {
+                let right_f = document.getElementById('right_bound').value;
+                if(right_f !== '') {
                     return evaluate(right_f, slider.Value() - (width / 2), 'y'); 
                 } else return 0;
             } else if(vertical_rectangle.isChecked()) {
@@ -245,8 +246,8 @@ Slider Min = <input type="text" id="slider_min" value="0">
             if(horizontal_rectangle.isChecked()) {
                 return slider.Value() - (width / 2); 
             } else if(vertical_rectangle.isChecked()) {
-                upper_f = document.getElementById('upper_bound').value;
-                if(upper_f != '') {
+                let upper_f = document.getElementById('upper_bound').value;
+                if(upper_f !== '') {
                     return evaluate(upper_f, slider.Value() + (width / 2), 'x');
                 } else return 0;
             } else return 0;
@@ -260,7 +261,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
     let P3 = board.create('point', [
         function() { 
             if(horizontal_rectangle.isChecked()) {
-                right_f = document.getElementById('right_bound').value;
+                let right_f = document.getElementById('right_bound').value;
                 if(right_f != '') {
                     return evaluate(right_f, slider.Value() - (width / 2), 'y'); 
                 } else return 0;
@@ -272,7 +273,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
             if(horizontal_rectangle.isChecked()) {
                 return P1.Y() + width; 
             } else if(vertical_rectangle.isChecked()) {
-                upper_f = document.getElementById('upper_bound').value;
+                let upper_f = document.getElementById('upper_bound').value;
                 if(upper_f != '') {
                     return evaluate(upper_f, slider.Value() + (width / 2), 'x');
                 } else return 0;
@@ -296,7 +297,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
             if(horizontal_rectangle.isChecked()) {
                 return P1.Y() + width; 
             } else if(vertical_rectangle.isChecked()) {
-                lower_f = document.getElementById('lower_bound').value;
+                let lower_f = document.getElementById('lower_bound').value;
                 if(lower_f != '') {
                     return evaluate(lower_f, slider.Value() + (width / 2), 'x');
                 } else return 0;
@@ -316,8 +317,8 @@ Slider Min = <input type="text" id="slider_min" value="0">
      * @returns f(value) 
      */
     function evaluate(func, value, variable) {
-        func = func.slice(func.indexOf('='));
-        return evalstr(func, { variable: value });
+        func = func.slice(func.indexOf('=') + 1);
+        return evalstr(func, { [variable]: value});
     }
 
     function update() {
@@ -344,23 +345,6 @@ Slider Min = <input type="text" id="slider_min" value="0">
         
         board.update();	
             
-    }
-
-    function changeVariable(s, a, b) {
-
-        s = replaceAll(s, a, b);
-        s = replaceAll(s, 'etp', 'exp');
-
-        return s;
-    }
-
-    function replaceAll(s, a, b) {
-
-        while(s.indexOf(a) != -1) {
-            s = s.replace(a, b);
-        }
-        return s;
-
     }
 
 </script>
