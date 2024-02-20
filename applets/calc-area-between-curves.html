@@ -7,8 +7,8 @@
 	<meta charset="utf-8">  
 
 		<!-- JSX Graph -->
-		<script type="text/javascript" charset="UTF-8" src="https://cdn.jsdelivr.net/npm/jsxgraph@1.4.3/distrib/jsxgraphcore.js"></script>
-		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph@1.4.3/distrib/jsxgraph.css" />
+		<script type="text/javascript" charset="UTF-8" src="https://cdn.jsdelivr.net/npm/jsxgraph@1.7.0/distrib/jsxgraphcore.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph@1.7.0/distrib/jsxgraph.css" />
 
 		<!-- Math.js -->
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.5.0/math.min.js"></script>
@@ -18,7 +18,7 @@
 
 <body>
 
-<h1>Disk and Shell Method Formulas</h1>
+<h1>Area Between Curves</h1>
 Y Minimum = <input type="text" id="lower_bound" value="">
 &emsp;&emsp;Y Maximum = <input type="text" id="upper_bound" value="">
 &emsp;&emsp;<input type="button" value="Update" onClick="update()">
@@ -27,8 +27,8 @@ Y Minimum = <input type="text" id="lower_bound" value="">
 X Minimum = <input type="text" id="left_bound" value="">
 &emsp;&emsp;X Maximum = <input type="text" id="right_bound" value="">
 <br />
-Slider Min = <input type="text" id="slider_min" value="0">
-&emsp;&emsp;Slider Max = <input type="text" id="slider_max" value="10">
+Interval: &emsp;a = <input type="text" id="slider_min" value="0">
+&emsp;&emsp;b = <input type="text" id="slider_max" value="10">
 &emsp;&emsp;<input type="button" value="Toggle Zoom Panel" id="toggle-zoom-panel">
 <br /><br />
 
@@ -43,6 +43,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
     import { CheckBox } from '../js/checkbox.js';
     import { plot, plot_function, plot_parametric, plot_xfunction, plot_polar } from '../js/plot.js';
     import { JSXGetBounds } from '../js/misc.js';
+    import { makeJSFunction } from '../js/functions.js';
 
     let board = JXG.JSXGraph.initBoard('jxgbox', {
         boundingbox: [-10,10,10,-10], 
@@ -76,20 +77,54 @@ Slider Min = <input type="text" id="slider_min" value="0">
     window.update = update;
     window.fullscreen = fullscreen;
 
+    window.board = board;
+
     // Initialize boundaries so that we have something we can update
     let boundaries = [];
+
+  // Riemann sum between two functions
+ /* var s = board.create('slider',[[0,4],[3,4],[0,4,10]],{snapWidth:1});
+  var g = function(x) { return 0.5*x*x-2*x; };
+  var f = function(x) { return -x*(x-4); };
+  var r = board.create('riemannsum',
+              [[g,f], function(){return s.Value();}, 'lower', 0, 4],
+              {fillOpacity:0.4}
+              );
+  var f = board.create('functiongraph',[f, -2, 5]);
+  var g = board.create('functiongraph',[g, -2, 5]);
+  var t = board.create('text',[-2,-2, function(){ return 'Sum=' + JXG.toFixed(r.Value(), 4); }]); */
 
     let slider_min = parseInt(document.getElementById('slider_min').value);
     let slider_max = parseInt(document.getElementById('slider_max').value);
     let slider_avg = (slider_min + slider_max) / 2;
 
-    let slider = controlboard.create('slider', [ [1, 9], [8, 9], 
+    let cb_show_all_rects = new CheckBox(controlboard, 0.5, 9.5, 'Show All Rectangles', true, () => {
+        riemannsum.setAttribute( { visible: cb_show_all_rects.isChecked() });
+    }, { fontSize: 18, fixed: true });
+    controlboard.create('text', [1, 9, 'n:'], { fontSize: 18, fixed: true });
+    let n_rects = controlboard.create('slider', [ [2, 9], [8, 9], [1, 4, 50] ], { 
+        withLabel: true,
+        snapWidth: 1
+    });
+    n_rects.on('drag', () => { board.update(); });
+
+    let riemannsum = board.create('riemannsum', [ [()=>NaN, ()=>NaN], 4, 'middle', 0, 4]);
+    window.riemannsum = riemannsum;
+
+    let txt_sum = controlboard.create('text', [1, 8.5, () => `Sum: ${riemannsum.Value().toFixed(8)}`],
+        { fontSize: 18, fixed: true });
+
+    let cb_show_rect = new CheckBox(controlboard, 0.5, 8, 'Show Approximating Rectangle', false, () => {
+        rectangle.setAttribute( { visible: cb_show_rect.isChecked() });
+    }, { fontSize: 18, fixed: true });
+
+    let slider = controlboard.create('slider', [ [1, 7.5], [8, 7.5], 
         [slider_min, slider_avg, slider_max] ], { withLabel: true });
     slider.on('drag', function() { board.update(); });
 
     let txt1 = controlboard.create('text', [1, 4, 'Rectangle Orientation:'], { fontSize: 18, fixed: true });
 
-    let vertical_rectangle = new CheckBox(controlboard, 2, 3.5, 'Vertical', true,
+    let vertical_rectangle = new CheckBox(controlboard, 2, 3.5, 'Vertical (dx)', true,
         function() {
             vertical_rectangle.set(true);
             horizontal_rectangle.set(false);
@@ -99,7 +134,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
         { fontSize: 18, fixed: true }
     );
     
-    let horizontal_rectangle = new CheckBox(controlboard, 2, 3, 'Horizontal', false,
+    let horizontal_rectangle = new CheckBox(controlboard, 2, 3, 'Horizontal (dy)', false,
         function() {
             horizontal_rectangle.set(true);
             vertical_rectangle.set(false);
@@ -117,66 +152,49 @@ Slider Min = <input type="text" id="slider_min" value="0">
             cb_horizontal_axis.set(false);
             cb_no_axis.set(false);
             horizontal_axis.setAttribute({ visible: false });
-            horiz_axis_loc.setAttribute({ visible: false });
             vertical_axis.setAttribute({ visible: true });
-            vert_axis_loc.setAttribute({ visible: true });
             set_method();
             update();
         },
         { fontSize: 18, fixed: true }
     );
     
-    let cb_horizontal_axis = new CheckBox(controlboard, 2, 1, 'Horizontal', true,
+    let cb_horizontal_axis = new CheckBox(controlboard, 2, 1, 'Horizontal', false,
         function() {
             cb_vertical_axis.set(false);
             cb_horizontal_axis.set(true);
             cb_no_axis.set(false);
             horizontal_axis.setAttribute({ visible: true });
-            horiz_axis_loc.setAttribute({ visible: true });
             vertical_axis.setAttribute({ visible: false });
-            vert_axis_loc.setAttribute({ visible: false });
             set_method();
             update();
         },
         { fontSize: 18, fixed: true }
     );
 	
-    let cb_no_axis = new CheckBox(controlboard, 2, 0.5, 'None', false,
+    let cb_no_axis = new CheckBox(controlboard, 2, 0.5, 'None', true,
         function() {
             cb_vertical_axis.set(false);
             cb_horizontal_axis.set(false);
             cb_no_axis.set(true);
             horizontal_axis.setAttribute({ visible: false });
-            horiz_axis_loc.setAttribute({ visible: false });
             vertical_axis.setAttribute({ visible: false });
-            vert_axis_loc.setAttribute({ visible: false });
             set_method();
             update();
         },
         { fontSize: 18, fixed: true });
 
-    let hidden_horiz_line = board.create('line', [[-10, -9], [20, -9]], { visible: false });
-    let vert_axis_loc = board.create('glider', [0, 0, hidden_horiz_line], 
-        { name: 'v', withLabel: false, showInfoBox: false, visible: false });
-    let vertical_axis = board.create('line', [vert_axis_loc, [
-        function() { 
-            return vert_axis_loc.X() 
-        }, 0]], 
-        { dash: 3, color: 'black', visible: false }
-    );
-
-    let hidden_vert_line = board.create('line', [[-9, 9], [-9, -9]], { visible: false });
-    let horiz_axis_loc = board.create('glider', [0, 0, hidden_vert_line], 
-        { name: 'h', withlabel: false, showInfoBox: false });
-    let horizontal_axis = board.create('line', [horiz_axis_loc, [0, 
-        function() { 
-            return horiz_axis_loc.Y() 
-        }]], 
-        { dash: 3, color: 'black'}
-    );
+    let vertical_axis = board.create('line', [[0,0], [0,1]], { dash: 3, color: 'black ', visible: false });
+    let horizontal_axis = board.create('line', [[0,0], [1,0]], { dash: 3, color: 'black', visible: false });
 
     let method_label = controlboard.create('text', [1, 7, 'Disk Method'], { fontSize: 18, fixed: true });
     let disk_method = true;
+
+    // transformations needed for horizontal riemann sum
+    let ob_line = board.create('line', [ [-1, 1], [0, 0]], { visible: false });
+    var trans1 = board.create('transform', [ Math.PI ], { type:'rotate' });
+    var trans2 = board.create('transform', [ ob_line ], { type: 'reflect' });
+
     set_method();
     update();
 
@@ -206,7 +224,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
     // vertical rectangle: P1 = ( x - w/2, f1(x - w/2) )
 
     let P1 = board.create('point', [
-        function() {
+        () => {
             if(horizontal_rectangle.isChecked()) {
                 let left_f = document.getElementById('left_bound').value;
                 if(left_f != '') {
@@ -216,7 +234,7 @@ Slider Min = <input type="text" id="slider_min" value="0">
                 return slider.Value() - (width / 2);
             } else return 0;
         }, 
-        function() { 
+        () => { 
             if(horizontal_rectangle.isChecked()) {
                 return slider.Value() - (width / 2); 
             } else if (vertical_rectangle.isChecked()) {
@@ -307,7 +325,11 @@ Slider Min = <input type="text" id="slider_min" value="0">
         { visible: false, name: 'P4' }
     );
 	
-    let rectangle = board.create('polygon', [P1, P2, P3, P4], { fillColor: '#00FF00' });
+    let rectangle = board.create('polygon', [P1, P2, P3, P4], { 
+        visible: false,
+        fillColor: '#FF00FF',
+        opacity: 1, 
+    });
 
     /**
      * Evaluates a function of the form: y=f(x) or x = g(y), but the x= and y=
@@ -344,6 +366,29 @@ Slider Min = <input type="text" id="slider_min" value="0">
         slider.setValue(slider_avg);
         slider.update();
         
+        board.removeObject(riemannsum);
+
+        if (vertical_rectangle.isChecked()) {
+            let f = math.compile(upper_f);
+            let g = math.compile(lower_f);
+            riemannsum = board.create('riemannsum',
+                [ [(x) => f.evaluate({x: x}), (x) => g.evaluate({x: x})], 
+                () => { return n_rects.Value(); }, 'middle', slider_min, slider_max],
+                { fillColor: '#00FF00' }
+            );
+        } else if (horizontal_rectangle.isChecked()) {
+            let f = math.compile(right_f);
+            let g = math.compile(left_f);
+            riemannsum = board.create('riemannsum',
+                [ [(y) => g.evaluate({y: y}), (y) => f.evaluate({y: y})], 
+                () => { return n_rects.Value(); }, 'middle', slider_min, slider_max],
+                { fillColor: '#00FF00' }
+            );          
+
+            trans2.bindTo(riemannsum);
+            trans1.bindTo(riemannsum);
+        }
+
         board.update();	
             
     }
