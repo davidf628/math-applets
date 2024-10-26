@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+	<title>functions.js Test</title>
+	<meta charset="utf-8">
+		<!-- Math.js -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.5.0/math.min.js"></script>
+	</meta>
+</head>
+
+<body>
+
+<p id="output"></p>
+
+<script type='module'>
+
+    import { getVariables, getFunctionName } from '../js/functions.js';
+    import { htmlify } from '../js/misc.js';
+
+    getFunctionName_test()
+
+    function getFunctionName_test() {
+
+        let tests = [ 
+            { test: 'y=2x+1', expected: 'y' },
+            { test: 'y=x^2+2x+pi', expected: 'y' },
+            { test: 'x=2y+4', expected: 'x' },
+            { test: 'r=2t-4', expected: 'r', },
+            { test: '<t, t^2+1>', expected: '' },
+            { test: 'x^2+2y+4x=5y+1', expected: '' },
+            { test: 'hat=2x+pi', expected: 'hat' }
+        ];
+
+        let returnval = '';
+        for (let test of tests) {
+            try {
+                returnval = getFunctionName(test.test);
+            } catch (err) {
+                returnval = err;
+            }
+            document.getElementById('output').innerHTML += `getFunctionName(${htmlify(test.test)}), expected: ${htmlify(test.expected)} => returns: ${htmlify(returnval)}<br/>`;
+            console.log(`getFunctionName(${test.test}), expected: ${test.expected} => returns: ${returnval}`);
+        }
+
+    }
+
+    function getVariables_test() {
+
+        let tests = [ 
+            { test: 'y=2x+1', expected: 'x' },
+            { test: 'y=x^2+2x+pi', expected: 'x' },
+            { test: 'x=2y+4', expected: 'y' },
+            { test: 'r=2t-4', expected: 't', },
+            { test: '<t, t^2+1>', expected: 't' },
+            { test: 'x^2+2y+4x=5y+1', expected: 'x, y' },
+            { test: 'hat=2x+pi', expected: 'x' }
+        ];
+
+        let returnval = '';
+        for (let test of tests) {
+            try {
+                returnval = getVariables(test.test);
+            } catch (err) {
+                returnval = err;
+            }
+            document.getElementById('output').innerHTML += `getVariables(${htmlify(test.test)}), expected: ${htmlify(test.expected)} => returns: ${returnval}<br/>`;
+            console.log(`getVariables(${test.test}), expected: ${test.expected} => returns: ${returnval}`);
+        }
+
+    }
+
+
+</script>
+
+</body>

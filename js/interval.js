@@ -1,60 +1,68 @@
 import { evalstr } from './eval.js';
+import { combineRegex, removeSpaces } from './misc.js';
+import { NEGATIVE_INFINITY, POSITIVE_INFINITY } from './dmath.js';
 
 // Pattern for a restricted interval:
 
-const regex_math = '|[\\w\\+\\-\\*\\/^()]*';
-
-const regex_interval = '(\\(|\\[)\\s*' +                       // ( or [
-			           '(-?\\d*\\.?\\d*|-inf(inity)?|-oo)' +   // -2, 1.8, -inf, -oo
-			      	   ',\\s*' +                               // ,
-				       '(-?\\d*\\.?\\d*|\\+?inf(inity)?|\\+?oo)\\s*' + // -2, 1.8, +inf, +oo
-				       '(\\)|\\])';                            // ] or )
+const interval_pattern = 
+    [ /(\(|\[|\{)\s*/,                         // (, [, or {
+      /[\w\+\-\*\/\^\(\)\.]*\s*/,               // -2, 1.8, -inf, -oo, pi/2, etc.
+      /,\s*/,                                   // ,
+      /[\w\+\-\*\/\^\(\)\.]*\s*/,               //  -2, 1.8, +inf, +oo, pi/4, etc. 
+      /(\)|\]|\})/ ];                          // ), ], or }
+const regex_interval = combineRegex(interval_pattern);
+                       
 
 // Pattern for a hole in the graph:
 
-const regex_hole = '[Xx]\\s*!=\\s*' +          // x !=
-				   '(-?\\d*\\.?\\d*)';        // -2, 1.8, etc.
+const hole_pattern = 
+        /[Xx]\s*!=\s*/ +            // x !=
+        /(-?\d*\.?\d*)/;            // -2, 1.8, etc.
+const regex_hole = combineRegex(hole_pattern);
 
 /******************************************************************************
  * A function can be defined such as: y = 2x-5 (-2,5] and the interval needs
  *  to be removed for graphing this function determines if an interval exists 
  *  and returns it if so, or a blank string if it does not
  * @param relation {string} The relation to check for an interval 
+ * @returns if an interval exists, it will return the interval. If no interval
+ *  exists then it will return '', and if a syntax error occurs in the interval
+ *  then 'undefined' is returned
 */
 export function getInterval(relation) {
 
-	var interval = '';
-	var intervalstart = 0;
+    // Look for the 'on' keyword to identify a restricted interal
+    if (relation.search('on') !== -1) {
+        relation = removeSpaces(relation);
+        let interval_start = relation.search('on')+2;
+        let interval = relation.substring(interval_start);
+        if ((interval.search(regex_interval) !== -1) || (interval.search(regex_hole) !== -1)) {
+            return interval;
+        } else {
+            console.error(`\n${relation} contains a mal-formed interval\n`);
+            return undefined;
+        }
+    } else {
+        return '';
+    }
 
-	intervalstart = relation.search(regex_interval);
-	if (intervalstart != -1) {
-		interval = relation.substring(intervalstart, relation.length).trim();
-	}
-
-	intervalstart = relation.search(regex_hole);
-	if (intervalstart != -1) {
-		interval = relation.substring(intervalstart, relation.length).trim();
-	}
-
-	return interval;
 }
 
+/**
+ * Removes the specified interval from a function string
+ * @param {string} relation an expression of the form y=2x+5 (-2,5)
+ * @returns the expression without the specified interval
+ */
 export function removeInterval(relation) {
+    relation = relation.replace(getInterval(relation),'');
+    relation = relation.replace('on','').trim();
+    return relation;
+}
 
-	var interval = '';
-	var intervalstart = 0;
-
-	intervalstart = relation.search(regex_interval);
-	if (intervalstart != -1) {
-		relation = relation.substring(0, intervalstart).trim();
-	}
-
-	intervalstart = relation.search(regex_hole);
-	if (intervalstart != -1) {
-		relation = relation.substring(0, intervalstart).trim();
-	}
-
-	return relation;
+export function spliceInterval(relation) {
+    let interval = getInterval(relation);
+    let func = removeInterval(relation);
+    return [func, interval];
 }
 
 ///////////////////////////////////////////////////////////
@@ -65,25 +73,39 @@ export function removeInterval(relation) {
 ////////////////////////////////////////////////////////////
 
 export function getLowerEndpoint(interval) {
-	interval = removeSpaces(interval);
-	l = interval.split(',');
-	l[0] = l[0].substring(1, l[0].length);
-	if(l[0].includes('inf') || l[0].includes('-oo')) {
-		return NEGATIVE_INFINITY;
-	} else {
-		return evalstr(l[0]);
-	}
+    if (interval !== '') {
+        interval = removeSpaces(interval);
+        let l = interval.split(',');
+        l[0] = l[0].substring(1, l[0].length);
+        if(l[0].includes('inf') || l[0].includes('-oo')) {
+            return NEGATIVE_INFINITY;
+        } else {
+            return evalstr(l[0]);
+        }
+    } else {
+        return NEGATIVE_INFINITY;
+    }
 }
 
 export function getUpperEndpoint(interval) {
-	interval = removeSpaces(interval);
-	l = interval.split(',');
-	l[1] = l[1].substring(0, l[1].length - 1);
-	if(l[1].includes('inf') || l[1].includes('oo')) {
-		return POSITIVE_INFINITY;
-	} else {
-		return evalstr(l[1]);
-	}
+	if (interval !== '') {
+        interval = removeSpaces(interval);
+        let l = interval.split(',');
+        l[1] = l[1].substring(0, l[1].length - 1);
+        if(l[1].includes('inf') || l[1].includes('oo')) {
+            return POSITIVE_INFINITY;
+        } else {
+            return evalstr(l[1]);
+        }
+    } else {
+        return POSITIVE_INFINITY;
+    }
+}
+
+export function getEndpoints(interval) {
+    let lower_val = getLowerEndpoint(interval);
+    let upper_val = getUpperEndpoint(interval);
+    return [lower_val, upper_val];
 }
 
 export function getHoleValue(interval) {
@@ -97,40 +119,61 @@ export function getHoleValue(interval) {
 //
 /////////////////////////////////////////////////////////////////
 
+export function isInterval(interval) {
+    interval = removeSpaces(interval);
+    let regex = combineRegex( [/^/, regex_interval, /$/ ]);
+    return interval.search(regex) != -1;
+}
+
 export function lowerBoundOpen(interval) {
-	return interval.includes('(');
+	return isInterval(interval) && interval.includes('(');
 }
 
 export function upperBoundOpen(interval) {
-	return interval.includes(')');
+	return isInterval(interval) && interval.includes(')');
 }
 
 export function lowerBoundClosed(interval) {
-	return interval.includes('[');
+	return isInterval(interval) && interval.includes('[');
 }
 
 export function upperBoundClosed(interval) {
-	return interval.includes(']');
+	return isInterval(interval) && interval.includes(']');
 }
 
+export function isClosedInterval(interval) {
+    return lowerBoundClosed(interval) && upperBoundClosed(interval);
+}
 
-/******************************************************************************
+export function isOpenInterval(interval) {
+    return lowerBoundOpen(interval) && upperBoundOpen(interval);
+}
+
+/**
  * Determines if a relation given represents a point or not, which should be
- *  of the form (x, y)
+ *  of the form (x, y) or [x, y]
  * @param relation {string} the relation to check
- * @todo rename this function: containsPoint(relation)
  */
 export function isPoint(relation) {
+	return isOpenInterval(relation) || isClosedInterval(relation);
+}
 
-/* 	let intervalstart = relation.search(regex_interval);
-	if (intervalstart != -1) {
-		let interval = relation.substring(intervalstart, relation.length).trim();
-		let relation = relation.substring(0, intervalstart).trim();
-	}
+/**
+ * Determines if a relation given represents a solid point to plot. This is 
+ * confusing because (x,y) is the form of a solid point.
+ * @param relation {string} the relation to check
+ */ 
+export function isClosedPoint(relation) {
+    return isOpenInterval(relation);
+}
 
-	return relation === ''; */
-	return relation.search(regex_interval) != -1;
-
+/**
+ * Determines if a relation given represents a solid point to plot. This is 
+ * confusing because [x,y] is the form of an open circle.
+ * @param relation {string} the relation to check
+ */ 
+export function isOpenPoint(relation) {
+    return isClosedInterval(relation);
 }
 
 /******************************************************************************

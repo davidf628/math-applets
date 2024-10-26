@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+
+	<title>Area Between Two Curves</title>
+	<meta charset="utf-8">  
+
+		<!-- JSX Graph -->
+		<script type="text/javascript" charset="UTF-8" src="https://cdn.jsdelivr.net/npm/jsxgraph@1.7.0/distrib/jsxgraphcore.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph@1.7.0/distrib/jsxgraph.css" />
+
+		<!-- Math.js -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.5.0/math.min.js"></script>
+
+	</meta>
+</head>
+
+<body>
+
+<h1>Area Between Curves</h1>
+Y Minimum = <input type="text" id="lower_bound" value="">
+&emsp;&emsp;Y Maximum = <input type="text" id="upper_bound" value="">
+&emsp;&emsp;<input type="button" value="Update" onClick="update()">
+&emsp;&emsp;<button onclick="fullscreen()">Toggle FullScreen</button>
+<br />
+X Minimum = <input type="text" id="left_bound" value="">
+&emsp;&emsp;X Maximum = <input type="text" id="right_bound" value="">
+<br />
+Interval: &emsp;a = <input type="text" id="slider_min" value="0">
+&emsp;&emsp;b = <input type="text" id="slider_max" value="10">
+&emsp;&emsp;<input type="button" value="Toggle Zoom Panel" id="toggle-zoom-panel">
+<br /><br />
+
+<div id="jxgbox" class="jxgbox" style="width:1000px; height:720px; float:left; resize: both"></div>
+<div id="display" class="jxgbox" style="width:320px; height:720px; float:left"></div>
+
+<script type='module'>
+
+    import { evalstr } from '../js/eval.js';
+    import { fullscreen } from '../js/helpers.js';
+    import { ZoomPanel } from '../js/ZoomPanel.js';
+    import { CheckBox } from '../js/checkbox.js';
+    import { plot, plot_function, plot_parametric, plot_xfunction, plot_polar } from '../js/plot.js';
+    import { JSXGetBounds } from '../js/misc.js';
+    import { makeJSFunction } from '../js/functions.js';
+
+    let board = JXG.JSXGraph.initBoard('jxgbox', {
+        boundingbox: [-10,10,10,-10], 
+        showCopyright: false, 
+        showNavigation: true,
+        keepaspectratio: true,
+        axis: true,
+        zoom: {
+            factorX: 1.25,
+            factorY: 1.25,
+            wheel: true,
+            needshift: false,
+            eps: 0.1
+        },
+        selection: { enabled: false }
+    });
+	
+    let controlboard = JXG.JSXGraph.initBoard('display', {
+        boundingbox: [0,10,10,0], 
+        showCopyright: false, 
+        showNavigation: false,
+        keepaspectratio: false,
+        axis: false,
+        pan: { enabled: false }
+    });	
+			
+    // Set up x and y zoom sliders
+    let zoomPanel = new ZoomPanel(board, { visible: false, xinit: 20, yinit: 20 });
+    document.getElementById('toggle-zoom-panel').onclick = () => { zoomPanel.toggleVisible() };
+
+    window.update = update;
+    window.fullscreen = fullscreen;
+
+    window.board = board;
+
+    // Initialize boundaries so that we have something we can update
+    let boundaries = [];
+
+  // Riemann sum between two functions
+ /* var s = board.create('slider',[[0,4],[3,4],[0,4,10]],{snapWidth:1});
+  var g = function(x) { return 0.5*x*x-2*x; };
+  var f = function(x) { return -x*(x-4); };
+  var r = board.create('riemannsum',
+              [[g,f], function(){return s.Value();}, 'lower', 0, 4],
+              {fillOpacity:0.4}
+              );
+  var f = board.create('functiongraph',[f, -2, 5]);
+  var g = board.create('functiongraph',[g, -2, 5]);
+  var t = board.create('text',[-2,-2, function(){ return 'Sum=' + JXG.toFixed(r.Value(), 4); }]); */
+
+    let slider_min = parseInt(document.getElementById('slider_min').value);
+    let slider_max = parseInt(document.getElementById('slider_max').value);
+    let slider_avg = (slider_min + slider_max) / 2;
+
+    let cb_show_all_rects = new CheckBox(controlboard, 0.5, 9.5, 'Show All Rectangles', true, () => {
+        riemannsum.setAttribute( { visible: cb_show_all_rects.isChecked() });
+    }, { fontSize: 18, fixed: true });
+    controlboard.create('text', [1, 9, 'n:'], { fontSize: 18, fixed: true });
+    let n_rects = controlboard.create('slider', [ [2, 9], [8, 9], [1, 4, 50] ], { 
+        withLabel: true,
+        snapWidth: 1
+    });
+    n_rects.on('drag', () => { board.update(); });
+
+    let riemannsum = board.create('riemannsum', [ [()=>NaN, ()=>NaN], 4, 'middle', 0, 4]);
+    window.riemannsum = riemannsum;
+
+    let txt_sum = controlboard.create('text', [1, 8.5, () => `Sum: ${riemannsum.Value().toFixed(8)}`],
+        { fontSize: 18, fixed: true });
+
+    let cb_show_rect = new CheckBox(controlboard, 0.5, 8, 'Show Approximating Rectangle', false, () => {
+        rectangle.setAttribute( { visible: cb_show_rect.isChecked() });
+    }, { fontSize: 18, fixed: true });
+
+    let slider = controlboard.create('slider', [ [1, 7.5], [8, 7.5], 
+        [slider_min, slider_avg, slider_max] ], { withLabel: true });
+    slider.on('drag', function() { board.update(); });
+
+    let txt1 = controlboard.create('text', [1, 4, 'Rectangle Orientation:'], { fontSize: 18, fixed: true });
+
+    let vertical_rectangle = new CheckBox(controlboard, 2, 3.5, 'Vertical (dx)', true,
+        function() {
+            vertical_rectangle.set(true);
+            horizontal_rectangle.set(false);
+            set_method()
+            update();
+        }, 
+        { fontSize: 18, fixed: true }
+    );
+    
+    let horizontal_rectangle = new CheckBox(controlboard, 2, 3, 'Horizontal (dy)', false,
+        function() {
+            horizontal_rectangle.set(true);
+            vertical_rectangle.set(false);
+            set_method();
+            update();
+        },
+        { fontSize: 18, fixed: true }
+    );
+
+    let txt2 = controlboard.create('text', [1, 2, 'Axis of Rotation:'], { fontSize: 18, fixed: true });
+
+    let cb_vertical_axis = new CheckBox(controlboard, 2, 1.5, 'Vertical', false,
+        function() {
+            cb_vertical_axis.set(true);
+            cb_horizontal_axis.set(false);
+            cb_no_axis.set(false);
+            horizontal_axis.setAttribute({ visible: false });
+            vertical_axis.setAttribute({ visible: true });
+            set_method();
+            update();
+        },
+        { fontSize: 18, fixed: true }
+    );
+    
+    let cb_horizontal_axis = new CheckBox(controlboard, 2, 1, 'Horizontal', false,
+        function() {
+            cb_vertical_axis.set(false);
+            cb_horizontal_axis.set(true);
+            cb_no_axis.set(false);
+            horizontal_axis.setAttribute({ visible: true });
+            vertical_axis.setAttribute({ visible: false });
+            set_method();
+            update();
+        },
+        { fontSize: 18, fixed: true }
+    );
+	
+    let cb_no_axis = new CheckBox(controlboard, 2, 0.5, 'None', true,
+        function() {
+            cb_vertical_axis.set(false);
+            cb_horizontal_axis.set(false);
+            cb_no_axis.set(true);
+            horizontal_axis.setAttribute({ visible: false });
+            vertical_axis.setAttribute({ visible: false });
+            set_method();
+            update();
+        },
+        { fontSize: 18, fixed: true });
+
+    let vertical_axis = board.create('line', [[0,0], [0,1]], { dash: 3, color: 'black ', visible: false });
+    let horizontal_axis = board.create('line', [[0,0], [1,0]], { dash: 3, color: 'black', visible: false });
+
+    let method_label = controlboard.create('text', [1, 7, 'Disk Method'], { fontSize: 18, fixed: true });
+    let disk_method = true;
+
+    // transformations needed for horizontal riemann sum
+    let ob_line = board.create('line', [ [-1, 1], [0, 0]], { visible: false });
+    var trans1 = board.create('transform', [ Math.PI ], { type:'rotate' });
+    var trans2 = board.create('transform', [ ob_line ], { type: 'reflect' });
+
+    set_method();
+    update();
+
+    function set_method() {
+        //alert('vertical rectangle == ' + vertical_rectangle.Value() + '  horizontal rectangle == ' + horizontal_rectangle.Value() + '\n' + 'vertical axis == ' + cb_vertical_axis.Value() + '  horizontal axis == ' + cb_horizontal_axis.Value());
+        if((vertical_rectangle.isChecked() && cb_horizontal_axis.isChecked()) || 
+                (horizontal_rectangle.isChecked() && cb_vertical_axis.isChecked())) {
+            disk_method = true;
+            method_label.setText('Disk Method');
+            //alert('We\'ll call it the Disk Method');
+        }
+        if((vertical_rectangle.isChecked() && cb_vertical_axis.isChecked()) || 
+                (horizontal_rectangle.isChecked() && cb_horizontal_axis.isChecked())) {
+            disk_method = false;
+            method_label.setText('Shell Method');
+            //alert('We\'ll call it the Shell Method');
+        } 
+        if(cb_no_axis.isChecked()) {
+            method_label.setText('');
+        }
+    };
+	
+    // The width of the rectangle
+    let width = 0.25;
+
+    // horizontal rectangle: P1 = ( g1(y - w/2), y - w/2  )
+    // vertical rectangle: P1 = ( x - w/2, f1(x - w/2) )
+
+    let P1 = board.create('point', [
+        () => {
+            if(horizontal_rectangle.isChecked()) {
+                let left_f = document.getElementById('left_bound').value;
+                if(left_f != '') {
+                    return evaluate(left_f, slider.Value() - (width / 2), 'y');
+                } else return 0;
+            } else if(vertical_rectangle.isChecked()) {
+                return slider.Value() - (width / 2);
+            } else return 0;
+        }, 
+        () => { 
+            if(horizontal_rectangle.isChecked()) {
+                return slider.Value() - (width / 2); 
+            } else if (vertical_rectangle.isChecked()) {
+                let lower_f = document.getElementById('lower_bound').value;
+                if(lower_f != '') {
+                    return evaluate(lower_f, slider.Value() + (width / 2), 'x');
+                } else return 0;
+            } else return 0;
+        }], 
+        { visible: false, name: 'P1' }
+    );
+			
+    // horizontal rectangle: P2 = (g2(y - w/2), g1(y - w/2) )
+    // vertical rectangle: P2 = (x - w/2, f2(x - w/2))		
+	
+    let P2 = board.create('point', [
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                let right_f = document.getElementById('right_bound').value;
+                if(right_f !== '') {
+                    return evaluate(right_f, slider.Value() - (width / 2), 'y'); 
+                } else return 0;
+            } else if(vertical_rectangle.isChecked()) {
+                return slider.Value() - (width / 2);
+            } else return 0;
+        }, 
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                return slider.Value() - (width / 2); 
+            } else if(vertical_rectangle.isChecked()) {
+                let upper_f = document.getElementById('upper_bound').value;
+                if(upper_f !== '') {
+                    return evaluate(upper_f, slider.Value() + (width / 2), 'x');
+                } else return 0;
+            } else return 0;
+        }], 
+        { visible: false, name: 'P2' }
+    );
+			
+    // horizontal rectangle: P3 = (g2(y - w/2), g1(y - w/2) + w )
+    // vertical rectangle: P3 = (x + width, f2(x + width))
+			
+    let P3 = board.create('point', [
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                let right_f = document.getElementById('right_bound').value;
+                if(right_f != '') {
+                    return evaluate(right_f, slider.Value() - (width / 2), 'y'); 
+                } else return 0;
+            } else if(vertical_rectangle.isChecked()) {
+                return slider.Value() + width; 
+            } else return 0;
+        }, 
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                return P1.Y() + width; 
+            } else if(vertical_rectangle.isChecked()) {
+                let upper_f = document.getElementById('upper_bound').value;
+                if(upper_f != '') {
+                    return evaluate(upper_f, slider.Value() + (width / 2), 'x');
+                } else return 0;
+            } else return 0;
+        }], 
+        { visible: false, name: 'P3' }
+    );
+			
+    // horizontal rectangle: P4 = ( g1(y - w/2), g1(y - w/2) + w )
+    // vertical rectangle: P4 = (x + width, f1(x + width))			
+			
+    var P4 = board.create('point', [
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                return P1.X(); 
+            } else if(vertical_rectangle.isChecked()) {
+                return slider.Value() + width;
+            } else return 0;
+        }, 
+        function() { 
+            if(horizontal_rectangle.isChecked()) {
+                return P1.Y() + width; 
+            } else if(vertical_rectangle.isChecked()) {
+                let lower_f = document.getElementById('lower_bound').value;
+                if(lower_f != '') {
+                    return evaluate(lower_f, slider.Value() + (width / 2), 'x');
+                } else return 0;
+            } else return 0;
+        }],
+        { visible: false, name: 'P4' }
+    );
+	
+    let rectangle = board.create('polygon', [P1, P2, P3, P4], { 
+        visible: false,
+        fillColor: '#FF00FF',
+        opacity: 1, 
+    });
+
+    /**
+     * Evaluates a function of the form: y=f(x) or x = g(y), but the x= and y=
+     * are ignored and the variable to substitue value into must be specified.
+     * @param func - the fuction to evaluate
+     * @param value - the value to evaluate the funciton at
+     * @param variable - the variable to change within the function
+     * @returns f(value) 
+     */
+    function evaluate(func, value, variable) {
+        func = func.slice(func.indexOf('=') + 1);
+        return evalstr(func, { [variable]: value});
+    }
+
+    function update() {
+
+        let bounds = JSXGetBounds(board);
+
+        let upper_f = document.getElementById('upper_bound').value;
+        let lower_f = document.getElementById('lower_bound').value;
+        let right_f = document.getElementById('right_bound').value;
+        let left_f = document.getElementById('left_bound').value;
+
+        boundaries[0] = plot(board, upper_f, { pieces: boundaries[0] });
+        boundaries[1] = plot(board, lower_f, { pieces: boundaries[1] });
+        boundaries[2] = plot(board, right_f, { pieces: boundaries[2] });
+        boundaries[3] = plot(board, left_f, { pieces: boundaries[3] });
+            
+        slider_min = parseFloat(document.getElementById('slider_min').value);
+        slider_max = parseFloat(document.getElementById('slider_max').value);
+        slider_avg = (slider_min + slider_max) / 2;
+        slider.setMin(slider_min);	
+        slider.setMax(slider_max);
+        slider.setValue(slider_avg);
+        slider.update();
+        
+        board.removeObject(riemannsum);
+
+        if (vertical_rectangle.isChecked()) {
+            let f = math.compile(upper_f);
+            let g = math.compile(lower_f);
+            riemannsum = board.create('riemannsum',
+                [ [(x) => f.evaluate({x: x}), (x) => g.evaluate({x: x})], 
+                () => { return n_rects.Value(); }, 'middle', slider_min, slider_max],
+                { fillColor: '#00FF00' }
+            );
+        } else if (horizontal_rectangle.isChecked()) {
+            let f = math.compile(right_f);
+            let g = math.compile(left_f);
+            riemannsum = board.create('riemannsum',
+                [ [(y) => g.evaluate({y: y}), (y) => f.evaluate({y: y})], 
+                () => { return n_rects.Value(); }, 'middle', slider_min, slider_max],
+                { fillColor: '#00FF00' }
+            );          
+
+            trans2.bindTo(riemannsum);
+            trans1.bindTo(riemannsum);
+        }
+
+        board.update();	
+            
+    }
+
+</script>
+</body>
+</html>

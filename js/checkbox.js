@@ -28,9 +28,9 @@ export class CheckBox {
 
 		// Create the checkbox
 		this.checkbox = board.create('checkbox', [xLoc, yLoc, label], args);
-		//this.checkbox.rendNodeCheckbox.checked = checked;
-		//this.checkbox._value = checked;
-        this.checkbox.checked = checked;
+		this.checkbox.rendNodeCheckbox.checked = checked;
+		this.checkbox._value = checked;
+        //this.checkbox.checked = checked;
 
 		// Attach an onChange event function, if one was provided
 		if (onChange) {
@@ -43,9 +43,9 @@ export class CheckBox {
 	 * Sets the current state of the check box
 	 */
 	set(value) {
-		//this.checkbox._value = value;
-		//this.checkbox.rendNodeCheckbox.checked = value;
-        this.checked = value;
+		this.checkbox._value = value;
+		this.checkbox.rendNodeCheckbox.checked = value;
+        //this.checked = value;
 	}
 
 	/**************************************************************************

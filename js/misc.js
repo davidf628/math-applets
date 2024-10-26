@@ -7,7 +7,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function JSXGetBounds(board) {
+export function JSXGetBounds(board) {
 	var bounds = board.getBoundingBox();
 	var box = {
 			xmin: bounds[0],
@@ -27,7 +27,7 @@ function JSXGetBounds(board) {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function JSXSetBounds(board, bounds, keepAspectRatio) {
+export function JSXSetBounds(board, bounds, keepAspectRatio) {
 
 	var box = JSXGetBounds(board);
 
@@ -39,12 +39,37 @@ function JSXSetBounds(board, bounds, keepAspectRatio) {
 	return board.setBoundingBox([xmin, ymax, xmax, ymin], keepAspectRatio);
 }
 
+export function combineRegex(regexes) {
+    let new_regex = '';
+    for (let regex of regexes) {
+        new_regex += regex.source;
+    }
+    //let allFlags = regex1.flags + regex2.flags;
+    //let uniqueFlags = new Set(allFlags.split(''));
+    //allFlags = [...uniqueFlags].join('');
+    //let combined = new RegExp(regex1.source + regex2.source, allFlags);
+    return new RegExp(new_regex);
+}
 
-
+export function htmlify(str) {
+    str = str.replace('<', '&lt;');
+    str = str.replace('>', '&gt;');
+    return str;
+}
 
 export function removeSpaces(s) {
 	while(s.search(' ') != -1) {
 		s = s.replace(' ', '');
 	}
 	return s;
+}
+
+/**
+ * Determines whether or not a given object is empty, which is surprisingly
+ * difficult in javascript.
+ * @param {object} obj - the object to check
+ * @returns true if obj === {}
+ */
+export function isEmptyObject(obj) {
+    return (obj === undefined) || (Object.keys(obj).length === 0);
 }
