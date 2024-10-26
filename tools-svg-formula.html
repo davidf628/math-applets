@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+
+    <title>SVG Formula</title>
+    <meta charset="utf-8">
+
+    <!-- MathJax with ASCIIMath support -->
+    <script>
+        MathJax = {
+        loader: {load: ['input/asciimath', 'output/chtml', 'ui/menu']},
+        };
+        </script>
+        <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/startup.js">
+    </script>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
+    <!-- Set a browser icon to use -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+    <!-- -->
+
+</head>
+
+<html>
+<h1>Convert an equation to SVG</h1>
+
+<label for="equation">Equation:</label>
+<input type="text" id="equation" name="equation" size="60" value="">&emsp;&emsp;
+
+<input type="button" value="Create Data Set" onClick="update()">
+
+<div id='equation-space'>
+</div>
+
+</body>
+
+
+
+<script type="module">
+
+    window.update = update;
+    window.MathJax = {
+        loader: {
+          load: ['input/asciimath']
+        },
+        asciimath: {
+          delimiters: [['$','$'], ['`','`']]
+        }
+      };
+
+    function update() {
+        document.write('Mean: `bar(x)=(Sigma x)/n`')
+    }
+
+</script>
+
+
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MathJax AsciiMath Test Page</title>
+<!-- Copyright (c) 2012-2013 The MathJax Consortium -->
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=AM_HTMLorMML-full"></script>
+<script src="https://unpkg.com/asciimath2tex@1.2.1/dist/asciimath2tex.umd.js"></script>"
+
+</head>
+<body>
+
+
+<p>
+When `a != 0`, there are two solutions to `ax^2 + bx + c = 0` and they are
+</p>
+<p style="text-align:center">
+`x = (-b +- sqrt(b^2-4ac))/(2a) .`
+</p>
+
+<p style="text-align:center">
+    `\bar{x}=\frac{sum x}{n}`
+    </p>
+
+<div id="equation-space">
+
+</div>
+
+<script>
+    const parser = new AsciiMathParser();
+    const tex = parser.parse('bar(x)=(\\sum x)/n');
+    document.write(tex);
+    fetch(`https://latex.codecogs.com/svg.image?${tex}`)
+        .then((response) => response.text())
+        .then((text) => {console.log(text); document.getElementById("equation-space").innerHTML = text; });
+
+    document.write(text);
+
+</script>
+
+</body>
+</html>

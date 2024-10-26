@@ -25,10 +25,16 @@
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
     <!-- -->
+    <link rel="stylesheet" type="text/css" href="./style.css">
+
+
 
 </head>
 
 <html>
+
+<body class="light-mode">
+
 <h1>The Empirical Rule</h1>
 
 <label for="samplesize">Sample Size:</label>
@@ -80,12 +86,17 @@
 
 <input type="button" value="Toggle Fullscreen" onClick="fullscreen()">
 
+<!-- <button onclick="toggleMode()">Toggle Mode</button> -->
+
 <br /><br />
 
 <div>
     <div id='jxgbox' class='jxgbox' style='width:900px; height:600px; float: left; resize: both'></div>
     <div id='displayboard' class='jxgbox' style='width: 320px; height: 600px; float: left; resize: both'></div>
 </div>
+
+</body>
+
 
 <script type="module">
 
@@ -129,6 +140,8 @@
             enabled: false
         }
     });
+
+    
 
     // Bind module functions to the window object
     window.update = update;
@@ -502,11 +515,12 @@
         });
     }
 
-    window.thething = function () {
-        console.log("HI");
-    }
+    window.toggleMode = function() {
+        var body = document.body;
+        body.classList.toggle("light-mode");
+        body.classList.toggle("dark-mode");
+      }
 
 </script>
-
 
 </html>
