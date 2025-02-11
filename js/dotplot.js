@@ -254,6 +254,12 @@ export class DotPlot {
         return this.points;
     }
     
+    setDotColor(newColor) {
+        this.points.forEach((point, i) => {
+            point.setAttribute( { strokeColor: newColor, color: newColor });
+        });
+    }
+
     getBounds() {
         return this.bounds;
     }
